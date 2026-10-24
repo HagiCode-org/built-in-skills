@@ -1,0 +1,93 @@
+{
+  "schemaVersion": 1,
+  "skills": [
+    {
+      "slug": "impeccable",
+      "version": "4.7.1",
+      "source": {
+        "type": "github",
+        "repository": "pbakaus/impeccable",
+        "ref": "936867543ac2576920d663cc9803597f6044f3ac",
+        "path": ".agents/skills/impeccable"
+      },
+      "contentHash": "sha256:8e7dc6f0e09f32ac674fe39d7771b8f9e397262b3a54cc4e82112df3e27f707c"
+    },
+    {
+      "slug": "ponytail",
+      "version": "5.3.2",
+      "source": {
+        "type": "github",
+        "repository": "dietrichgebert/ponytail",
+        "ref": "16352ac229eb08a9598dcae48fe9f2b342567d86",
+        "path": "skills/ponytail"
+      },
+      "contentHash": "sha256:b7f7690ed8342f6a732624ef699d6d644f13a1b6bd0a845c828da9bc66d4f4af"
+    },
+    {
+      "slug": "ponytail-audit",
+      "version": "5.3.2",
+      "source": {
+        "type": "github",
+        "repository": "dietrichgebert/ponytail",
+        "ref": "16352ac229eb08a9598dcae48fe9f2b342567d86",
+        "path": "skills/ponytail-audit"
+      },
+      "contentHash": "sha256:52214a6756ff3b53170c6fed61ab241434dbbc47713613d00d407ac27c609e34"
+    },
+    {
+      "slug": "ponytail-debt",
+      "version": "5.3.2",
+      "source": {
+        "type": "github",
+        "repository": "dietrichgebert/ponytail",
+        "ref": "16352ac229eb08a9598dcae48fe9f2b342567d86",
+        "path": "skills/ponytail-debt"
+      },
+      "contentHash": "sha256:e175d1816871e913ad03ea8ff707d5454e0c7b885b2b1edd48a7a33c1500672a"
+    },
+    {
+      "slug": "ponytail-gain",
+      "version": "5.3.2",
+      "source": {
+        "type": "github",
+        "repository": "dietrichgebert/ponytail",
+        "ref": "16352ac229eb08a9598dcae48fe9f2b342567d86",
+        "path": "skills/ponytail-gain"
+      },
+      "contentHash": "sha256:463d0368c1c05759b2f83e35025598c13a773f337d7d2aaa6d40dc6136b8fda0"
+    },
+    {
+      "slug": "ponytail-help",
+      "version": "5.3.2",
+      "source": {
+        "type": "github",
+        "repository": "dietrichgebert/ponytail",
+        "ref": "16352ac229eb08a9598dcae48fe9f2b342567d86",
+        "path": "skills/ponytail-help"
+      },
+      "contentHash": "sha256:35805caa9773fbf0a4fba4b86a0d77704328a3b0d02d84b3548f4607356390c9"
+    },
+    {
+      "slug": "ponytail-review",
+      "version": "5.3.2",
+      "source": {
+        "type": "github",
+        "repository": "dietrichgebert/ponytail",
+        "ref": "16352ac229eb08a9598dcae48fe9f2b342567d86",
+        "path": "skills/ponytail-review"
+      },
+      "contentHash": "sha256:035d9bfb12d842040cd143448558b96243d2928b9bb150d132b8db0ff9d7bfa5"
+    },
+    {
+      "slug": "visualise",
+      "version": "6018846",
+      "source": {
+        "type": "github",
+        "repository": "HagiCode-org/skills-visualise",
+        "ref": "6018846517d18a13bca224f69f713d939ff4b349",
+        "path": "."
+      },
+      "contentHash": "sha256:fd28a9d5b748dcc1e112fe31cc96ef668d9aec711dcd043fc44d303dc90cf143"
+    }
+  ]
+}
