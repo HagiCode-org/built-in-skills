@@ -1,0 +1,7 @@
+interface:
+  display_name: "Hagi CLI"
+  short_description: "Answer questions about your HagiCode data, and operate the hagi CLI."
+  default_prompt: "Use $hagi to look up your projects, proposals, sessions, vaults, plans, or skills, or to inspect, run, or update the HagiCode CLI in repos/cli."
+
+policy:
+  allow_implicit_invocation: true

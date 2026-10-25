@@ -21,7 +21,13 @@ tests/test_built_in_skills.py     tests for the tool
 
 Everything outside `content/` stays out of release packages. Only `content/` is the publishable unit.
 
-Current skills: `impeccable`, `ponytail`, `ponytail-audit`, `ponytail-debt`, `ponytail-gain`, `ponytail-help`, `ponytail-review`, `visualise`.
+Current skills: `hagi`, `impeccable`, `ponytail`, `ponytail-audit`, `ponytail-debt`, `ponytail-gain`, `ponytail-help`, `ponytail-review`, `visualise`.
+
+## The `hagi` skill
+
+`hagi` is the agent skill for the `hagi` CLI. It is copied from the `HagiCode-org/cli` repository, path `skills/hagi/`, which is the only place it is edited. `content/hagi/` is a byte-for-byte copy of that folder at the commit named in its lock entry. Claude Code lists it as `hagi:hagi`.
+
+Do not edit `content/hagi/` here. To change it: edit `repos/cli/skills/hagi/`, commit in the CLI repository, recopy the folder, and set the lock entry's `ref` to that commit and `contentHash` to the output of `hash hagi`.
 
 ## Lock file
 

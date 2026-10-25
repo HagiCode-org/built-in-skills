@@ -2,6 +2,17 @@
   "schemaVersion": 1,
   "skills": [
     {
+      "slug": "hagi",
+      "version": "0.1.0",
+      "source": {
+        "type": "github",
+        "repository": "HagiCode-org/cli",
+        "ref": "e4223c6c37766fd6e278da9080ae4d9ef651fced",
+        "path": "skills/hagi"
+      },
+      "contentHash": "sha256:6b5797c407c860841f178245a2d1239c9449a0efdcc5acaed9c457b0d45b62f8"
+    },
+    {
       "slug": "impeccable",
       "version": "4.7.1",
       "source": {
