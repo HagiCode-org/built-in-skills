@@ -209,6 +209,27 @@ class RealContentTests(unittest.TestCase):
         self.assertTrue(content.is_dir(), f"missing {content}")
         self.assertEqual(bis.verify(content), [])
 
+    def test_every_lock_source_is_in_the_third_party_notices(self) -> None:
+        notices = (REPO / "THIRD-PARTY-NOTICES.md").read_text(encoding="utf-8")
+        lock = json.loads((REPO / "content" / "built-in-skills.lock.json").read_text(encoding="utf-8"))
+        for entry in lock["skills"]:
+            repository = entry["source"].get("repository")
+            if repository is not None:
+                self.assertIn(f"`{repository}`", notices, f"{entry['slug']}: {repository} is not in THIRD-PARTY-NOTICES.md")
+
+    def test_copied_skills_carry_a_license_file(self) -> None:
+        # hagi and visualise are not edited here, so their license statement lives in THIRD-PARTY-NOTICES.md only.
+        without_file = {"hagi", "visualise"}
+        lock = json.loads((REPO / "content" / "built-in-skills.lock.json").read_text(encoding="utf-8"))
+        for entry in lock["skills"]:
+            if entry["slug"] in without_file:
+                continue
+            folder = REPO / "content" / entry["slug"]
+            self.assertTrue(
+                (folder / "LICENSE").is_file() or (folder / "LICENSE-NOTICE.md").is_file(),
+                f"{entry['slug']} has neither LICENSE nor LICENSE-NOTICE.md",
+            )
+
 
 if __name__ == "__main__":
     unittest.main()
