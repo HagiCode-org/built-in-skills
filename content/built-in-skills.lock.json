@@ -21,7 +21,7 @@
         "ref": "936867543ac2576920d663cc9803597f6044f3ac",
         "path": ".agents/skills/impeccable"
       },
-      "contentHash": "sha256:8e7dc6f0e09f32ac674fe39d7771b8f9e397262b3a54cc4e82112df3e27f707c"
+      "contentHash": "sha256:bdeb076826ea29cade71ed0cf676c859e407f9844110077f44037af43c7f5cd7"
     },
     {
       "slug": "ponytail",
@@ -32,7 +32,7 @@
         "ref": "16352ac229eb08a9598dcae48fe9f2b342567d86",
         "path": "skills/ponytail"
       },
-      "contentHash": "sha256:b7f7690ed8342f6a732624ef699d6d644f13a1b6bd0a845c828da9bc66d4f4af"
+      "contentHash": "sha256:f1e2f015ee231b977bf5f382afe723e784262a7c46f7571ec0db6e6b4826489a"
     },
     {
       "slug": "ponytail-audit",
@@ -43,7 +43,7 @@
         "ref": "16352ac229eb08a9598dcae48fe9f2b342567d86",
         "path": "skills/ponytail-audit"
       },
-      "contentHash": "sha256:52214a6756ff3b53170c6fed61ab241434dbbc47713613d00d407ac27c609e34"
+      "contentHash": "sha256:fe02755b91ba862fdbed615b6a1efa980ad62678dd7ea55ad288f2ba6b96b2c8"
     },
     {
       "slug": "ponytail-debt",
@@ -54,7 +54,7 @@
         "ref": "16352ac229eb08a9598dcae48fe9f2b342567d86",
         "path": "skills/ponytail-debt"
       },
-      "contentHash": "sha256:e175d1816871e913ad03ea8ff707d5454e0c7b885b2b1edd48a7a33c1500672a"
+      "contentHash": "sha256:b39660718b1ee7fa8a8768e551341aca76bf4e066d094934417cc5a217989bec"
     },
     {
       "slug": "ponytail-gain",
@@ -65,7 +65,7 @@
         "ref": "16352ac229eb08a9598dcae48fe9f2b342567d86",
         "path": "skills/ponytail-gain"
       },
-      "contentHash": "sha256:463d0368c1c05759b2f83e35025598c13a773f337d7d2aaa6d40dc6136b8fda0"
+      "contentHash": "sha256:ff554ac16839bb34becfaad1df3082bc5b3a555d54486e87c7fa23cf0e8010e9"
     },
     {
       "slug": "ponytail-help",
@@ -76,7 +76,7 @@
         "ref": "16352ac229eb08a9598dcae48fe9f2b342567d86",
         "path": "skills/ponytail-help"
       },
-      "contentHash": "sha256:35805caa9773fbf0a4fba4b86a0d77704328a3b0d02d84b3548f4607356390c9"
+      "contentHash": "sha256:b1dfa473d31e27cb4462d4a788e42754e35d4f41f86b9c38818ca4ae93b354bd"
     },
     {
       "slug": "ponytail-review",
@@ -87,7 +87,40 @@
         "ref": "16352ac229eb08a9598dcae48fe9f2b342567d86",
         "path": "skills/ponytail-review"
       },
-      "contentHash": "sha256:035d9bfb12d842040cd143448558b96243d2928b9bb150d132b8db0ff9d7bfa5"
+      "contentHash": "sha256:667d4fe15fb1f4f081845282dfe725a186390daeb461bc1090ee89d55b8b4e40"
+    },
+    {
+      "slug": "systematic-debugging",
+      "version": "7.0.1",
+      "source": {
+        "type": "github",
+        "repository": "obra/superpowers",
+        "ref": "2ce8aa15d05bd57213e6f746f953aafb7ded7a8b",
+        "path": "skills/systematic-debugging"
+      },
+      "contentHash": "sha256:6764be4d9160ee51e897bdda91efb024fb5467e9050b069b426c8b6e7703afd4"
+    },
+    {
+      "slug": "vercel-react-best-practices",
+      "version": "1.0.0",
+      "source": {
+        "type": "github",
+        "repository": "vercel-labs/agent-skills",
+        "ref": "063bee94c3f4df8453406c830b0a7df0f2860278",
+        "path": "skills/react-best-practices"
+      },
+      "contentHash": "sha256:bea1742c963b440085a8acb9cbc2b2d2b2a837b4b11941bf425ca0742e7737f2"
+    },
+    {
+      "slug": "verification-before-completion",
+      "version": "7.0.1",
+      "source": {
+        "type": "github",
+        "repository": "obra/superpowers",
+        "ref": "2ce8aa15d05bd57213e6f746f953aafb7ded7a8b",
+        "path": "skills/verification-before-completion"
+      },
+      "contentHash": "sha256:3088e9a23251de33062fb8cd71701babb3c2730375c0ad795d6b3cb454c3d6da"
     },
     {
       "slug": "visualise",
