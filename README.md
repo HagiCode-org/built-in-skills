@@ -21,7 +21,14 @@ tests/test_built_in_skills.py     tests for the tool
 
 Everything outside `content/` stays out of release packages. Only `content/` is the publishable unit.
 
-Current skills: `hagi`, `impeccable`, `ponytail`, `ponytail-audit`, `ponytail-debt`, `ponytail-gain`, `ponytail-help`, `ponytail-review`, `visualise`.
+Current skills: `hagi`, `impeccable`, `ponytail`, `ponytail-audit`, `ponytail-debt`, `ponytail-gain`, `ponytail-help`, `ponytail-review`, `systematic-debugging`, `vercel-react-best-practices`, `verification-before-completion`, `visualise`.
+
+## Trimmed upstream copies
+
+Two skills are copies of an upstream folder with the upstream authoring files left out. Everything that is kept is byte-for-byte as upstream at the lock entry's `ref`, except the one local edit listed for `systematic-debugging`.
+
+- `systematic-debugging` (`obra/superpowers`, `skills/systematic-debugging`, MIT): left out `CREATION-LOG.md` and `test-academic.md`, `test-pressure-1.md`, `test-pressure-2.md`, `test-pressure-3.md`. Local edit to `SKILL.md`, because the upstream text points at skills of the `superpowers` plugin: the line that says to use `superpowers:test-driven-development` is removed (that skill is not built in), and `superpowers:verification-before-completion` is written as `verification-before-completion` (built in, so it loads whatever prefix the agent CLI adds). Reapply both when recopying from upstream.
+- `vercel-react-best-practices` (`vercel-labs/agent-skills`, `skills/react-best-practices`, MIT per the `license` field in its `SKILL.md`): left out `README.md`. The folder is named after the `name` in its `SKILL.md`, not after the upstream folder, so Claude Code lists it as `hagi:vercel-react-best-practices`.
 
 ## The `hagi` skill
 
@@ -89,6 +96,16 @@ To update `visualise`:
 
 - **Release build** (`repos/hagibuild`): `pybuild/built_in_skills.py` verifies this folder and stages it into each package as `lib/Resources/BuiltInSkills/`. It reads the folder from `project.builtInSkillsDirectory` in its `configuration.yaml`, which defaults to `../built-in-skills/content`. A build needs this repository checked out beside `repos/hagibuild`.
 - **Server, local development** (`repos/hagicode-core`): `BuiltInSkills:SourceRoot` in `src/PCode.Web/appsettings.Development.yml` reads this folder directly in `Source` mode. Production and the packaged server read the copy in the release package, not this folder.
+
+## License
+
+The files HagiCode wrote in this repository (the script, the tests, the lock file, the plugin manifest and the documentation) are under the MIT License in `LICENSE`.
+
+The skill folders under `content/` that were copied from other projects keep the license of their source. `THIRD-PARTY-NOTICES.md` lists each source, its license and its copyright holder. The upstream license file, and for `impeccable` its `NOTICE.md`, sits inside the skill folder, because only skill folders are copied into a release package. The lock hash covers those files.
+
+Added files that are not in the upstream folder: `LICENSE` in `impeccable`, the six `ponytail*` folders, `systematic-debugging` and `verification-before-completion`; `NOTICE.md` in `impeccable`; `LICENSE-NOTICE.md` in `vercel-react-best-practices`. `hagi` and `visualise` are not edited here, so their license statements are only in `THIRD-PARTY-NOTICES.md`.
+
+Not yet done: the release build copies only skill folders, the lock file and the plugin manifest, so `THIRD-PARTY-NOTICES.md` and `LICENSE` do not reach a release package.
 
 ## Working on this repository
 
