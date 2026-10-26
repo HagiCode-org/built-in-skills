@@ -65,7 +65,7 @@ Any byte change to a skill file changes its hash, including line endings. A CRLF
 1. Change the files in `content/<slug>/`.
 2. Run `python3 scripts/built_in_skills.py hash <slug>` and copy the printed `sha256:` value into that skill's `contentHash`. Do not compute it by hand.
 3. Update `version` and `source` in the same entry when the skill's origin changes.
-4. Run `python3 scripts/built_in_skills.py verify`. It exits non-zero and names each offending slug and kind when anything drifts.
+4. Run `python3 scripts/built_in_skills.py verify`. It exits non-zero and names each offending slug and kind when anything drifts. It also checks the front matter of every `SKILL.md`: the file must start with a `---` line, close it with a later `---` line, and give top-level `name:` and `description:` keys a non-empty value (inline, quoted, or a `>` or `|` block with at least one indented line). A bad front matter stops the release build too, which names the slug before any package is produced.
 5. Run `python3 -m unittest discover -s tests -v`.
 
 Verify reports these kinds of problem:
@@ -76,6 +76,7 @@ Verify reports these kinds of problem:
 | `orphan-lock-entry` | A lock entry has no folder |
 | `hash-drift` | The folder hash differs from the recorded `contentHash` |
 | `missing-skill-md` | A skill folder has no `SKILL.md` |
+| `invalid-front-matter` | A `SKILL.md` lacks a front matter block, has it unclosed, or lacks or leaves empty its `name` or `description` |
 | `lock-invalid` | The lock file is missing, not JSON, has the wrong schema, or an entry is malformed or duplicated |
 | `bundle-entry-invalid` | `.claude-plugin/plugin.json` is missing or does not name the `hagi` plugin with `"skills": "./"` |
 
