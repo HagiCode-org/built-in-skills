@@ -21,19 +21,47 @@ bis = importlib.util.module_from_spec(_spec)
 sys.modules["built_in_skills"] = bis
 _spec.loader.exec_module(bis)
 
-# Hash of the fixture below, pinned to a literal. The Build Tools parity test asserts the same value for
-# the same bytes (repos/hagibuild/tests/built_in_skills_fixtures.py), so the two implementations are tied.
+# Hash of the folder written by ``write_pinned_folder``, pinned to a literal. The Build Tools parity test asserts
+# the same value for the same bytes (repos/hagibuild/tests/test_built_in_skills.py), so the two implementations
+# are tied. The bytes stay as they are, so the pin does not move when the bundle fixture changes.
 PINNED_FIXTURE_HASH = "sha256:b2adc38125f08a8e0ad2074234b83cdb71bbcbeabaf8ccfeb7a0442cf6af29b6"
 
-FIXTURE_SKILL_MD = b"---\nname: sample\n---\nbody\n"
+PINNED_SKILL_MD = b"---\nname: sample\n---\nbody\n"
+# A valid skill document for the bundle fixture (the pinned bytes above lack the required description).
+VALID_SKILL_MD = b"---\nname: sample\ndescription: Sample skill for the tests.\n---\nbody\n"
 FIXTURE_NOTES = b"notes\n"
+
+# Shared with repos/hagibuild/tests/test_built_in_skills.py: the same texts and the same expected problems in
+# both suites, so the two front matter checks are held to one set of verdicts.
+FRONT_MATTER_FIXTURES: list[tuple[str, str, list[str]]] = [
+    ("inline name and description", "---\nname: alpha\ndescription: Does a thing.\n---\nbody\n", []),
+    ("quoted description with a colon", '---\nname: alpha\ndescription: "Does a thing: with a colon."\n---\n', []),
+    ("single-quoted name", "---\nname: 'alpha'\ndescription: Does a thing.\n---\n", []),
+    ("folded block description", "---\nname: alpha\ndescription: >\n  Does a thing\n  over two lines.\n---\nbody\n", []),
+    ("literal block with chomping indicator", "---\nname: alpha\ndescription: |-\n  Does a thing.\n---\n", []),
+    ("nested name below a valid pair", "---\nname: alpha\ndescription: Does a thing.\nmetadata:\n  name: beta\n---\n", []),
+    ("CRLF line endings", "---\r\nname: alpha\r\ndescription: Does a thing.\r\n---\r\nbody\r\n", []),
+    ("no front matter", "# Alpha\n\nbody\n", ["missing front matter block"]),
+    ("blank first line", "\n---\nname: alpha\ndescription: Does a thing.\n---\n", ["missing front matter block"]),
+    ("unclosed block", "---\nname: alpha\ndescription: Does a thing.\nbody\n", ["unclosed front matter block"]),
+    ("indented closing marker", "---\nname: alpha\ndescription: Does a thing.\n  ---\nbody\n", ["unclosed front matter block"]),
+    ("missing name", "---\ndescription: Does a thing.\n---\n", ["missing name"]),
+    ("missing description", "---\nname: alpha\n---\n", ["missing description"]),
+    ("missing both keys", "---\nlicense: MIT\n---\n", ["missing name", "missing description"]),
+    ("name only nested", "---\nmetadata:\n  name: alpha\n  description: Does a thing.\n---\n", ["missing name", "missing description"]),
+    ("empty inline name", "---\nname:\ndescription: Does a thing.\n---\n", ["empty name value"]),
+    ("empty quoted description", '---\nname: alpha\ndescription: ""\n---\n', ["empty description value"]),
+    ("block scalar without content", "---\nname: alpha\ndescription: >\n---\nbody\n", ["empty description value"]),
+    ("block scalar with blank lines only", "---\nname: alpha\ndescription: |\n\n---\nbody\n", ["empty description value"]),
+    ("comment as value", "---\nname: alpha\ndescription: # later\n---\n", ["empty description value"]),
+]
 
 
 def write_bundle(root: Path, slug: str = "sample") -> Path:
     """Write a consistent content folder with one skill, its lock entry and the plugin manifest."""
     skill = root / slug
     (skill / "reference").mkdir(parents=True, exist_ok=True)
-    (skill / bis.SKILL_FILE_NAME).write_bytes(FIXTURE_SKILL_MD)
+    (skill / bis.SKILL_FILE_NAME).write_bytes(VALID_SKILL_MD)
     (skill / "reference" / "notes.md").write_bytes(FIXTURE_NOTES)
     lock = {
         "schemaVersion": 1,
@@ -114,7 +142,7 @@ class VerifyTests(unittest.TestCase):
         self.assertIn(("sample", bis.KIND_HASH_DRIFT), kinds(bis.verify(self.root)))
 
     def test_crlf_line_endings_count_as_drift(self) -> None:
-        (self.root / "sample" / bis.SKILL_FILE_NAME).write_bytes(FIXTURE_SKILL_MD.replace(b"\n", b"\r\n"))
+        (self.root / "sample" / bis.SKILL_FILE_NAME).write_bytes(VALID_SKILL_MD.replace(b"\n", b"\r\n"))
         self.assertIn(("sample", bis.KIND_HASH_DRIFT), kinds(bis.verify(self.root)))
 
     def test_missing_skill_md_is_reported(self) -> None:
@@ -159,11 +187,20 @@ class VerifyTests(unittest.TestCase):
         self.assertEqual(bis.verify(self.root), [])
 
 
+def write_pinned_folder(root: Path) -> Path:
+    """Write the folder whose bytes ``PINNED_FIXTURE_HASH`` describes, and return the folder."""
+    skill = root / "sample"
+    (skill / "reference").mkdir(parents=True, exist_ok=True)
+    (skill / bis.SKILL_FILE_NAME).write_bytes(PINNED_SKILL_MD)
+    (skill / "reference" / "notes.md").write_bytes(FIXTURE_NOTES)
+    return skill
+
+
 class HashTests(unittest.TestCase):
     def test_fixture_hash_is_pinned(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
-            root = write_bundle(Path(tmp) / "content")
-            self.assertEqual(bis.content_hash(root / "sample"), PINNED_FIXTURE_HASH)
+            skill = write_pinned_folder(Path(tmp) / "content")
+            self.assertEqual(bis.content_hash(skill), PINNED_FIXTURE_HASH)
 
     def test_hash_command_prints_the_content_hash(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -172,7 +209,7 @@ class HashTests(unittest.TestCase):
             with contextlib.redirect_stdout(output):
                 status = bis.main(["hash", "sample", "--content", str(root)])
             self.assertEqual(status, 0)
-            self.assertEqual(output.getvalue().strip(), PINNED_FIXTURE_HASH)
+            self.assertEqual(output.getvalue().strip(), bis.content_hash(root / "sample"))
 
     def test_hash_command_rejects_unknown_slug(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -203,11 +240,55 @@ class CommandTests(unittest.TestCase):
             self.assertEqual(bis.main(["verify", "--content", str(Path(tmp) / "absent")]), 2)
 
 
+class FrontMatterTests(unittest.TestCase):
+    def test_shared_fixture_verdicts(self) -> None:
+        for label, text, expected in FRONT_MATTER_FIXTURES:
+            with self.subTest(label):
+                self.assertEqual(bis.front_matter_problems(text), expected)
+
+    def test_verify_reports_each_bad_fixture_under_its_slug(self) -> None:
+        for label, text, expected in FRONT_MATTER_FIXTURES:
+            with self.subTest(label), tempfile.TemporaryDirectory() as tmp:
+                root = write_bundle(Path(tmp) / "content")
+                (root / "sample" / bis.SKILL_FILE_NAME).write_bytes(text.encode("utf-8"))
+                # The lock hash is stale for the rewritten file, so only the front matter findings are compared.
+                found = [f for f in bis.verify(root) if f.kind == bis.KIND_INVALID_FRONT_MATTER]
+                if expected:
+                    self.assertEqual(found, [bis.Finding("sample", bis.KIND_INVALID_FRONT_MATTER, "; ".join(expected))])
+                else:
+                    self.assertEqual(found, [])
+
+    def test_non_utf8_skill_md_is_invalid_front_matter(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = write_bundle(Path(tmp) / "content")
+            (root / "sample" / bis.SKILL_FILE_NAME).write_bytes(b"\xff\xfe---\n")
+            found = [f for f in bis.verify(root) if f.kind == bis.KIND_INVALID_FRONT_MATTER]
+            self.assertEqual(found, [bis.Finding("sample", bis.KIND_INVALID_FRONT_MATTER, "front matter block unreadable (not UTF-8)")])
+
+    def test_verify_command_names_the_slug_and_missing_key(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = write_bundle(Path(tmp) / "content")
+            (root / "sample" / bis.SKILL_FILE_NAME).write_bytes(b"---\nname: sample\n---\nbody\n")
+            errors = io.StringIO()
+            with contextlib.redirect_stderr(errors):
+                status = bis.main(["verify", "--content", str(root)])
+            self.assertEqual(status, 1)
+            self.assertIn(f"sample: {bis.KIND_INVALID_FRONT_MATTER} (missing description)", errors.getvalue())
+
+
 class RealContentTests(unittest.TestCase):
     def test_real_content_verifies(self) -> None:
         content = REPO / "content"
         self.assertTrue(content.is_dir(), f"missing {content}")
         self.assertEqual(bis.verify(content), [])
+
+    def test_real_content_verify_command_exits_zero_and_writes_nothing(self) -> None:
+        content = REPO / "content"
+        before = snapshot(content)
+        with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+            status = bis.main(["verify", "--content", str(content)])
+        self.assertEqual(status, 0)
+        self.assertEqual(snapshot(content), before)
 
     def test_every_lock_source_is_in_the_third_party_notices(self) -> None:
         notices = (REPO / "THIRD-PARTY-NOTICES.md").read_text(encoding="utf-8")

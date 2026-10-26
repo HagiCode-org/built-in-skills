@@ -15,8 +15,14 @@ line-ending normalisation). The hash is the SHA-256 of the UTF-8 text formed by 
 that order, ``<relative path> TAB <file sha256 hex> LF``. The lock file and ``.gitattributes`` at the
 bundle root belong to no skill and are not hashed.
 
-The release build (``repos/hagibuild/pybuild/built_in_skills.py``) implements the same rule and checks.
-``tests/test_built_in_skills.py`` pins the rule to a literal value so the two cannot drift apart silently.
+Front matter rule (checked on every ``SKILL.md``, separate from the hash): the first line is ``---``, a later
+line that is exactly ``---`` closes the block, and top-level ``name:`` and ``description:`` keys each have a
+non-empty value (inline, quoted, or a ``>`` or ``|`` block scalar followed by a non-blank indented line).
+It is a line-based check. ``invalid-front-matter`` names the slug and each missing or empty item.
+
+The release build (``repos/hagibuild/pybuild/built_in_skills.py``) implements the same rules and checks.
+``tests/test_built_in_skills.py`` pins the hash rule to a literal value and runs one shared fixture of front
+matter texts, so the two cannot drift apart silently.
 """
 
 from __future__ import annotations
@@ -44,9 +50,13 @@ KIND_HASH_DRIFT = "hash-drift"
 KIND_MISSING_SKILL_MD = "missing-skill-md"
 KIND_LOCK_INVALID = "lock-invalid"
 KIND_BUNDLE_ENTRY_INVALID = "bundle-entry-invalid"
+KIND_INVALID_FRONT_MATTER = "invalid-front-matter"
 
 _SLUG_PATTERN = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]*$")
 _HASH_PATTERN = re.compile(r"^sha256:[0-9a-f]{64}$")
+_FRONT_MATTER_DELIMITER = "---"
+_BLOCK_SCALAR_PATTERN = re.compile(r"^[>|][0-9+-]*$")
+_FRONT_MATTER_KEYS = ("name", "description")
 
 
 @dataclass(frozen=True)
@@ -68,6 +78,53 @@ def content_hash(skill_dir: Path) -> str:
         digest = hashlib.sha256(path.read_bytes()).hexdigest()
         outer.update(f"{relative}\t{digest}\n".encode("utf-8"))
     return f"sha256:{outer.hexdigest()}"
+
+
+def _front_matter_value_ok(block: list[str], index: int, key: str) -> bool:
+    """Whether the top-level ``key:`` line at ``index`` of the front matter block has a non-empty value."""
+    raw = block[index][len(key) + 1 :].strip()
+    if not raw or raw.startswith("#"):
+        return False
+    if raw[0] in "\"'":
+        inner = raw[1:-1] if len(raw) >= 2 and raw[-1] == raw[0] else raw[1:]
+        return bool(inner.strip())
+    if _BLOCK_SCALAR_PATTERN.match(raw):
+        for line in block[index + 1 :]:
+            if line.strip():
+                return line[:1] in (" ", "\t")
+        return False
+    return True
+
+
+def front_matter_problems(text: str) -> list[str]:
+    """Return the missing or empty items of a ``SKILL.md`` text; an empty list means the front matter passes.
+
+    Line-based by design (see the module docstring). The same rule is implemented in
+    ``repos/hagibuild/pybuild/built_in_skills.py``, and both suites run one shared fixture of texts.
+    """
+    lines = text.split("\n")
+    if not lines or lines[0].rstrip() != _FRONT_MATTER_DELIMITER:
+        return ["missing front matter block"]
+    close = next((index for index in range(1, len(lines)) if lines[index].rstrip() == _FRONT_MATTER_DELIMITER), None)
+    if close is None:
+        return ["unclosed front matter block"]
+    block = lines[1:close]
+    problems: list[str] = []
+    for key in _FRONT_MATTER_KEYS:
+        index = next((i for i, line in enumerate(block) if line.startswith(f"{key}:")), None)
+        if index is None:
+            problems.append(f"missing {key}")
+        elif not _front_matter_value_ok(block, index, key):
+            problems.append(f"empty {key} value")
+    return problems
+
+
+def _front_matter_findings(skill_dir: Path) -> list[str]:
+    try:
+        text = (skill_dir / SKILL_FILE_NAME).read_text(encoding="utf-8")
+    except UnicodeDecodeError:
+        return ["front matter block unreadable (not UTF-8)"]
+    return front_matter_problems(text)
 
 
 def _read_lock(root: Path) -> list[object]:
@@ -169,6 +226,10 @@ def verify(root: Path = CONTENT_DIR) -> list[Finding]:
         has_skill_md = (skill_dir / SKILL_FILE_NAME).is_file()
         if not has_skill_md:
             findings.append(Finding(slug, KIND_MISSING_SKILL_MD))
+        else:
+            problems = _front_matter_findings(skill_dir)
+            if problems:
+                findings.append(Finding(slug, KIND_INVALID_FRONT_MATTER, "; ".join(problems)))
         if slug not in locked:
             findings.append(Finding(slug, KIND_MISSING_LOCK))
             continue
