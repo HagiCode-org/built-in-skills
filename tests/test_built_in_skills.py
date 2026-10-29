@@ -301,6 +301,17 @@ class ImpeccablePreviewTests(unittest.TestCase):
             text = (self.reference / f"{command}.md").read_text(encoding="utf-8")
             self.assertNotIn("data-preview.md", text, f"{command}.md links to data-preview.md but is not gated")
 
+    def test_preview_rule_says_what_the_svg_shows(self) -> None:
+        text = (self.reference / "data-preview.md").read_text(encoding="utf-8")
+        self.assertIn("## What the SVG shows", text)
+        self.assertIn("A gate yields one SVG", text)
+
+    def test_retired_per_level_wording_is_gone(self) -> None:
+        for command in ("quieter", "overdrive"):
+            text = (self.reference / f"{command}.md").read_text(encoding="utf-8")
+            self.assertNotIn("paired bars", text, f"{command}.md still draws paired bars per level")
+            self.assertNotIn("four assessed bars", text, f"{command}.md still draws four bars per direction")
+
 
 class RealContentTests(unittest.TestCase):
     def test_real_content_verifies(self) -> None:

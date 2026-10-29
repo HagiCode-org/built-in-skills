@@ -34,6 +34,15 @@ Rules:
 - Plot at most 10 rows. Sort by rank, highest first. Fold the rest into one aggregated bar labeled `other (N)`. The text table or the report still lists the full set.
 - If there is nothing to show (for example `extract` finds no pattern used 3 or more times), say so in one line and continue the command's normal flow without a preview and without a question.
 
+## What the SVG shows
+
+A gate yields one SVG. Draw it once, in a single `visualizer` fence, however many directions, levels or options the command presents.
+
+- **Data commands** (`extract`, `document`, `optimize`, `audit`, `critique`): the SVG is a chart of the labelled values the command gathered or assessed. It shows data, not an interface state.
+- **Interface-changing commands** (`overdrive`, `bolder`, `quieter`, `colorize`, `animate`, `delight`, `typeset`, `layout`, `distill`): the SVG depicts the resulting interface, prototype or visual effect. Draw the element where it appears on the surface, in its original place, with the planned change applied. Draw enough of the surrounding surface to recognise the location, not the whole page.
+- **Levels and directions are annotations.** Intensity levels, ambition levels and directions appear inside that one drawing as labelled panels, callouts or value labels. They are never separate drawings.
+- **A chart element annotates the drawing.** A command's own chart element (a swatch strip, a timeline, stepped bars, counts) sits beside or inside the in-context drawing. It never replaces the drawing.
+
 ## What each command previews
 
 ### Data commands
@@ -52,15 +61,15 @@ Every item comes from the plan the command wrote in this run. Do not show a chan
 
 | Command | Preview shows | Labels |
 |---|---|---|
-| `overdrive` | One row per direction (2 or 3). Four bars per row: ambition, performance cost, browser-support risk, complexity. | assessed |
-| `bolder` | The one planned move, beside the existing type, motif and density values it reuses, and the value it turns up. | current, proposed |
-| `quieter` | Paired current and planned bars for color saturation, visual weight, motion and element count. | current, proposed |
-| `colorize` | One row per role: its current swatch and its proposed swatch, the OKLCH values, and the text-on-canvas contrast ratio before and after. | current, proposed, computed |
-| `animate` | A timeline with one bar per planned motion, labeled with its duration and easing, and a marker for the budget the plan states. | proposed |
-| `delight` | A simple map of the surface with numbered markers at each planned moment. | proposed |
-| `typeset` | The type scale as stepped bars, current beside proposed, with sizes and weights. | current, proposed |
-| `layout` | The spacing scale and section rhythm as stepped bars, current beside proposed. | current, proposed |
-| `distill` | One bar per element group the plan removes or merges, with counts, and a count of what stays. | current, proposed |
+| `overdrive` | The surface drawn once, in context, with the 2 or 3 directions as labelled panels side by side. Each panel carries its direction's four values: ambition, performance cost, browser-support risk, complexity. | assessed |
+| `bolder` | The one planned move drawn in place on the surface, beside the existing type, motif and density values it reuses, with the value it turns up as a label on that move. | current, proposed |
+| `quieter` | The surface drawn once, with current and planned intensity for color saturation, visual weight, motion and element count as labelled marks on the elements they describe. | current, proposed |
+| `colorize` | The surface drawn once, with each role's current and proposed swatch on the element that uses it, labelled with its OKLCH values, and the text-on-canvas contrast ratio before and after. | current, proposed, computed |
+| `animate` | The element that moves, drawn in place, with a numbered callout for each planned motion labelled with its duration and easing. A timeline of those motions and a marker for the budget the plan states annotate it. | proposed |
+| `delight` | A simple map of the surface with numbered markers at each planned moment, each marker labelled with what happens there. | proposed |
+| `typeset` | The surface drawn once, with the planned type changes on the text they affect. The type scale as stepped bars, current beside proposed, with sizes and weights, annotates it. | current, proposed |
+| `layout` | The surface drawn once, with the planned spacing and section changes applied in place. The spacing scale and section rhythm as stepped bars, current beside proposed, annotate it. | current, proposed |
+| `distill` | The surface drawn once, with each element group the plan removes or merges marked in place and labelled with its count. A count of what stays annotates it. | current, proposed |
 
 ## Drawing the preview
 
@@ -70,8 +79,8 @@ Every item comes from the plan the command wrote in this run. Do not show a chan
 - Flat fills only: no gradients, shadows, blur or glow.
 - Chrome and text use the host theme variables through inline style, for example `style="fill: var(--foreground)"`. Use the variable names in the `visualise` skill's design-system reference, and do not hard-code a palette. Do not put `var()` in a presentation attribute such as `fill="var(--foreground)"`; it does not work there.
 - Project values (extracted or proposed colors) may appear only as fills that encode data, such as swatches. They are never used for text or chrome.
-- Label every bar or marker with its value. A reader must be able to read the figures without the drawing.
-- If the client cannot render a `visualizer` fence, or you know the preview will not display, present the same values as a Markdown text table in place of the SVG. The figures and the question are the same either way.
+- Label every bar, marker, panel or callout with its value. A reader must be able to read the figures without the drawing.
+- If the client cannot render a `visualizer` fence, or you know the preview will not display, present the same values as a Markdown text table in place of the SVG. The table also says in words where the planned change appears on the surface. The figures, that description and the question are the same either way.
 
 ## Confirmation
 

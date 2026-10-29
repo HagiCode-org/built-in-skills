@@ -42,7 +42,7 @@ Before editing, name:
 
 Choose the simplest structural model that expresses those relationships. Use layout primitives according to the relationships they control, and name reusable spacing and container roles semantically.
 
-**Preview gate.** Before Apply, show the spacing-rhythm preview defined in [data-preview.md](data-preview.md): the spacing scale and section rhythm as stepped bars, current beside proposed. Ask the confirmation that file defines, and make no edits until the user answers Proceed.
+**Preview gate.** Before Apply, show the spacing-rhythm preview defined in [data-preview.md](data-preview.md): the planned spacing changes drawn in place on the surface, with the spacing scale and section rhythm as stepped bars, current beside proposed, annotating that drawing. Ask the confirmation that file defines, and make no edits until the user answers Proceed.
 
 ## Apply
 
