@@ -12,6 +12,8 @@ An open direction round owns the word first: "bolder" said while a direction dec
 
 A section usually reads flat for reasons its neighbors have already solved. Look at what the rest of the page does that this section does not: the display type at full strength, the structural devices that carry meaning, the signature motif, the density and pacing. A flat section is typically one that quietly opts out of the system's own strongest moves. The most reliable bolder pass brings the target up to the expressive level its neighbors already reach, in the system's own vocabulary rather than a new one.
 
+**Preview gate.** Before The amplification, name the one move you plan, then show the preview defined in [data-preview.md](data-preview.md): that move beside the existing type, motif and density values it reuses, and the value it turns up. Ask the confirmation that file defines, and make no edits until the user answers Proceed.
+
 ## The amplification
 
 - **Amplify what the system already owns.** Reuse its motif and its type scale at full strength, turned up for this section rather than invented for it. The bolder version should look more like the same brand, not less.

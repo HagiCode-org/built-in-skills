@@ -36,6 +36,8 @@ Create a ruthless editing strategy:
 
 Expect to say no to good ideas to make room for great execution.
 
+**Preview gate.** Before Simplify the Design, show the removal-and-merge preview defined in [data-preview.md](data-preview.md): one bar per element group the plan removes or merges, with counts, and a count of what stays. Ask the confirmation that file defines, and remove or merge nothing until the user answers Proceed.
+
 ## Simplify the Design
 
 Systematically remove complexity across these dimensions:

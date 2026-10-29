@@ -276,6 +276,32 @@ class FrontMatterTests(unittest.TestCase):
             self.assertIn(f"sample: {bis.KIND_INVALID_FRONT_MATTER} (missing description)", errors.getvalue())
 
 
+class ImpeccablePreviewTests(unittest.TestCase):
+    # The fourteen command references wired to the preview gate (see content/impeccable/LOCAL-PATCHES.md).
+    GATED_COMMANDS = [
+        "extract", "document", "optimize", "audit", "critique",
+        "overdrive", "bolder", "quieter", "colorize", "animate", "delight", "typeset", "layout", "distill",
+    ]
+    UNGATED_COMMANDS = ["harden", "polish", "adapt", "clarify", "onboard", "shape", "init", "live", "generate", "visualize"]
+
+    def setUp(self) -> None:
+        self.reference = REPO / "content" / "impeccable" / "reference"
+
+    def test_shared_reference_and_disclosure_exist(self) -> None:
+        self.assertTrue((self.reference / "data-preview.md").is_file(), "missing reference/data-preview.md")
+        self.assertTrue((REPO / "content" / "impeccable" / "LOCAL-PATCHES.md").is_file(), "missing LOCAL-PATCHES.md")
+
+    def test_each_gated_command_links_to_the_shared_reference(self) -> None:
+        for command in self.GATED_COMMANDS:
+            text = (self.reference / f"{command}.md").read_text(encoding="utf-8")
+            self.assertIn("(data-preview.md)", text, f"{command}.md does not link to data-preview.md")
+
+    def test_ungated_commands_do_not_link_to_the_preview(self) -> None:
+        for command in self.UNGATED_COMMANDS:
+            text = (self.reference / f"{command}.md").read_text(encoding="utf-8")
+            self.assertNotIn("data-preview.md", text, f"{command}.md links to data-preview.md but is not gated")
+
+
 class RealContentTests(unittest.TestCase):
     def test_real_content_verifies(self) -> None:
         content = REPO / "content"

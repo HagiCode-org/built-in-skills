@@ -33,6 +33,8 @@ Write a short plan before implementation:
 
 The focal moment must come from this product and surface concept. A generic fade-and-rise, hover lift, parallax layer, or scroll reveal is not a thesis.
 
+**Preview gate.** Before Choose material by meaning, show the motion timeline defined in [data-preview.md](data-preview.md): one bar per planned motion, labeled with its duration and easing, and a marker for the budget stated above. Ask the confirmation that file defines. This gate covers every later step too, so write no code until the user answers Proceed.
+
 ## Choose material by meaning
 
 Transform and opacity are reliable foundations, not the entire palette. Choose properties for what the transition communicates:

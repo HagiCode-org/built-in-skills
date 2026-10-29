@@ -41,6 +41,8 @@ Before editing, state:
 
 Use the fewest roles and families that make the hierarchy unmistakable. Combine size, weight, space, and tone deliberately instead of asking size alone to do all the work. Role names and tokens should describe purpose rather than values.
 
+**Preview gate.** Before Apply, show the type-scale preview defined in [data-preview.md](data-preview.md): the scale as stepped bars, current beside proposed, with sizes and weights. Ask the confirmation that file defines, and make no edits until the user answers Proceed.
+
 ## Apply
 
 - Keep body copy comfortably readable and zoomable. Use 1rem / 16px as the ordinary web body floor unless a dense role, platform convention, or user setting justifies otherwise.

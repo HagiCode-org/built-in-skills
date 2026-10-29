@@ -33,6 +33,8 @@ Create a systematic plan:
 
 Design systems grow incrementally. Extract what is clearly reusable now, not everything that might someday be reusable.
 
+**Preview gate.** Before Step 4, show the candidate-pattern preview defined in [data-preview.md](data-preview.md): one bar per candidate with its occurrence count against the 3-use line. Ask the confirmation that file defines, and start Step 4 only after the user answers Proceed. If no pattern is used 3 or more times, say so in one line and continue without a preview.
+
 ## Step 4: Extract & Enrich
 
 Build improved, reusable versions:

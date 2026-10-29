@@ -113,6 +113,8 @@ From the auto-extracted tokens, draft the YAML frontmatter now (you'll write it 
 
 Skip anything the project doesn't have. Empty scale keys or fabricated tokens pollute the spec.
 
+**Preview gate (Scan mode only).** Before Step 3, show the scanned-data preview defined in [data-preview.md](data-preview.md): the extracted colors with their roles, the type scale, and the spacing and radii steps. Ask the confirmation that file defines, and run Step 3 and the writes after it only after the user answers Proceed. Seed mode has no preview, because no project data has been scanned.
+
 ### Step 3: Ask the user for qualitative language
 
 The following require creative input that cannot be auto-extracted. Ask them in two structured rounds of no more than three questions each (or the harness's lower limit), waiting between rounds:

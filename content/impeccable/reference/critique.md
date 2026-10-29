@@ -147,6 +147,8 @@ Be honest with scores. A 4 means genuinely excellent. Most real interfaces score
 
 **Mode applicability**: heuristics 7 (Flexibility and Efficiency) and 10 (Help and Documentation) may be scored `n/a` on Persuade and Experience surfaces (landing pages, campaigns, portfolios, bodies of work), as may any other heuristic that genuinely cannot apply to the surface under review. Write `n/a` in the Score cell with a one-line reason, and renormalize the total to the applicable maximum (e.g. **24/32** when two heuristics are n/a) so the rating band stays proportional. The persisted snapshot must record the applicable maximum and which heuristics were scored n/a.
 
+**Preview.** After the Design Health Score, show the heuristic preview defined in [data-preview.md](data-preview.md): one bar per scored heuristic, scaled 0 to 4, with the total. Use exactly the same scores and total as the table above, and leave out `n/a` heuristics. The preview is part of this report, not a gate before it.
+
 #### Design Specificity Verdict
 
 **Start here.** Does the result feel authored for this product, or category-interchangeable?
@@ -257,7 +259,7 @@ This is fire-and-forget. Do not show the user the helper's JSON output; only the
 
 ### Ask the User
 
-**After presenting findings**, use targeted questions based on what was actually found. Ask with Codex's structured user-input/question tool when available, or directly in chat if it is not, and wait for the answer before continuing. These answers will shape the action plan.
+**After presenting findings**, use targeted questions based on what was actually found. Ask with Ask User Question when it is available, or directly in chat when it is not or it returns an error, and wait for the answer before continuing. These answers will shape the action plan.
 
 Ask in the same message that carries the report, with the report written out first and the question last. Do not split the two across turns: a turn that ends on the report is a turn that ends, and the questions never arrive. Order within the message is what matters, because prose emitted after a structured question is withheld until the user answers.
 

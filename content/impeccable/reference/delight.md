@@ -34,6 +34,8 @@ State in one sentence what the user should feel and why that feeling belongs to 
 
 Derive the treatment from product mechanism and visual world, not a stock catalog.
 
+**Preview gate.** Before Build for the emotional moment, show the moment-placement map defined in [data-preview.md](data-preview.md): a simple map of the surface with a numbered marker for each planned moment. Ask the confirmation that file defines, and build nothing until the user answers Proceed.
+
 ## Build for the emotional moment
 
 - **Success:** match the response to the effort and consequence. Major milestones can expand; routine saves should simply feel certain.

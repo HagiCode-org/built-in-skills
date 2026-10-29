@@ -37,6 +37,8 @@ Build roles, not a bag of swatches:
 
 Use the project's existing color space. For a new web palette, prefer OKLCH because lightness and chroma can be adjusted predictably. Choose hue from product meaning and visual direction, never from a default category association.
 
+**Preview gate.** Before Apply at system scale, show the role preview defined in [data-preview.md](data-preview.md): each role's current and proposed swatch, its OKLCH values, and the text-on-canvas contrast ratio before and after. Ask the confirmation that file defines, and make no edits until the user answers Proceed.
+
 ## Apply at system scale
 
 - Let the strongest color own a deliberate region or role instead of scattering tiny accents.

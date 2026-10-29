@@ -19,6 +19,8 @@ Understand current performance and identify problems:
 
 Measure before and after. Optimizing without a measurement spends effort on things that do not matter.
 
+**Preview gate.** Before Optimization Strategy, show the measured-metric preview defined in [data-preview.md](data-preview.md): each measured metric against its budget. A metric you could not measure, such as INP, is omitted or labeled `not measured`, and is never plotted as a placeholder. Ask the confirmation that file defines, and make no edits until the user answers Proceed.
+
 ## Optimization Strategy
 
 Create systematic improvement plan:

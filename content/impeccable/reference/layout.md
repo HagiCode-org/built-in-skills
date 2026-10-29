@@ -42,6 +42,8 @@ Before editing, name:
 
 Choose the simplest structural model that expresses those relationships. Use layout primitives according to the relationships they control, and name reusable spacing and container roles semantically.
 
+**Preview gate.** Before Apply, show the spacing-rhythm preview defined in [data-preview.md](data-preview.md): the spacing scale and section rhythm as stepped bars, current beside proposed. Ask the confirmation that file defines, and make no edits until the user answers Proceed.
+
 ## Apply
 
 - Group by meaning. Use proximity before adding containers or decoration.

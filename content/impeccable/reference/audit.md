@@ -78,6 +78,8 @@ Run the bundled detector and verify each finding in context. Look for repeated i
 
 **Rating bands**: 18-20 Excellent (minor polish), 14-17 Good (address weak dimensions), 10-13 Acceptable (significant work needed), 6-9 Poor (major overhaul), 0-5 Critical (fundamental issues)
 
+**Preview.** Right after the table, show the score preview defined in [data-preview.md](data-preview.md): the five dimension scores out of 4, the total out of 20 with its rating band, and the P0 to P3 counts. Use exactly the same scores and total as the table above, and draw nothing the table does not show. The preview is part of this report and does not gate it.
+
 ### Implementation Integrity Verdict
 **Start here.** Pass/fail: does the implementation express a coherent product-specific system? Cite verified evidence and detector findings.
 
@@ -123,10 +125,8 @@ List recommended commands in priority order (P0 first, then P1, then P2):
 
 **Rules**: Only recommend commands from: $impeccable adapt, $impeccable animate, $impeccable audit, $impeccable bolder, $impeccable clarify, $impeccable colorize, $impeccable critique, $impeccable delight, $impeccable distill, $impeccable document, $impeccable harden, $impeccable layout, $impeccable onboard, $impeccable optimize, $impeccable overdrive, $impeccable polish, $impeccable quieter, $impeccable shape, $impeccable typeset. Map findings to the most appropriate command. End with `$impeccable polish` as the final step if any fixes were recommended.
 
-After presenting the summary, tell the user:
+After presenting the summary, ask which follow-up to run, with Ask User Question. Offer up to three of the recommended commands above as options, in priority order, plus **Stop**. Keep the question as the last thing in the message. If the tool is unavailable or errors, ask in chat and wait. Run only the command the user picks; this command fixes nothing itself.
 
-> You can ask me to run these one at a time, all at once, or in any order you prefer.
->
 > Re-run `$impeccable audit` after fixes to see your score improve.
 
 Keep P3s few: a long tail of minor issues buries the ones that matter.

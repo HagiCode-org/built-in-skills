@@ -43,6 +43,8 @@ Create a strategy to reduce intensity while maintaining impact:
 
 Subtlety requires precision. Quiet without intent collapses to generic.
 
+**Preview gate.** Before Refine the Design, show the intensity preview defined in [data-preview.md](data-preview.md): the current and planned intensity of color saturation, visual weight, motion and element count, as paired bars. Ask the confirmation that file defines, and make no edits until the user answers Proceed.
+
 ## Refine the Design
 
 Systematically reduce intensity across these dimensions:
