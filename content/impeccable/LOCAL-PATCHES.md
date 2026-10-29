@@ -11,19 +11,19 @@ Each patched file gets a short gate paragraph that points to `reference/data-pre
 - `reference/optimize.md`: gate before Optimization Strategy.
 - `reference/audit.md`: preview after the Audit Health Score table. The closing follow-up prose is replaced with an Ask User Question choice.
 - `reference/critique.md`: preview after the Design Health Score. "Ask the User" uses Ask User Question. Its existing rules are kept.
-- `reference/overdrive.md`: direction-comparison preview before the pick. Stop is added as an option.
-- `reference/bolder.md`: gate before The amplification.
-- `reference/quieter.md`: gate before Refine the Design.
+- `reference/overdrive.md`: direction-comparison preview before the pick, drawn as one in-context SVG of the surface with a labelled panel per direction. Stop is added as an option.
+- `reference/bolder.md`: gate before The amplification. The gate paragraph draws the one planned move in place on the surface.
+- `reference/quieter.md`: gate before Refine the Design. The gate paragraph places current and planned intensity as labelled marks on the in-context drawing of the surface.
 - `reference/colorize.md`: gate before Apply at system scale.
-- `reference/animate.md`: gate before Choose material by meaning.
+- `reference/animate.md`: gate before Choose material by meaning. The gate paragraph places the motion timeline as an annotation on the in-context drawing of the moving element.
 - `reference/delight.md`: gate before Build for the emotional moment.
-- `reference/typeset.md`: gate before Apply.
-- `reference/layout.md`: gate before Apply.
-- `reference/distill.md`: gate before Simplify the Design.
+- `reference/typeset.md`: gate before Apply. The gate paragraph places the stepped type-scale bars as an annotation on the in-context drawing.
+- `reference/layout.md`: gate before Apply. The gate paragraph places the stepped spacing bars as an annotation on the in-context drawing.
+- `reference/distill.md`: gate before Simplify the Design. The gate paragraph places the removal-and-merge bars as an annotation on the in-context drawing.
 
 ## Added files
 
-- `reference/data-preview.md`: the shared rules for the preview gate. Which commands it covers, the values each preview may show, how to draw the SVG, and how the confirmation works.
+- `reference/data-preview.md`: the shared rules for the preview gate. Which commands it covers, the values each preview may show, what the one SVG depicts for data and interface-changing commands, how to draw it, and how the confirmation works.
 - `LOCAL-PATCHES.md`: this file.
 - `LICENSE` and `NOTICE.md`: upstream license and notice, carried over unchanged, as listed in the repository README.
 
