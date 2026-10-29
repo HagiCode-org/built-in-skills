@@ -104,7 +104,7 @@ The files HagiCode wrote in this repository (the script, the tests, the lock fil
 
 The skill folders under `content/` that were copied from other projects keep the license of their source. `THIRD-PARTY-NOTICES.md` lists each source, its license and its copyright holder. The upstream license file, and for `impeccable` its `NOTICE.md`, sits inside the skill folder, because only skill folders are copied into a release package. The lock hash covers those files.
 
-Added files that are not in the upstream folder: `LICENSE` in `impeccable`, the six `ponytail*` folders, `systematic-debugging` and `verification-before-completion`; `NOTICE.md` in `impeccable`; `LICENSE-NOTICE.md` in `vercel-react-best-practices`. `hagi` and `visualise` are not edited here, so their license statements are only in `THIRD-PARTY-NOTICES.md`.
+Added files that are not in the upstream folder: `LICENSE`, `LOCAL-PATCHES.md` and `reference/data-preview.md` in `impeccable`, the six `ponytail*` folders, `systematic-debugging` and `verification-before-completion`; `NOTICE.md` in `impeccable`; `LICENSE-NOTICE.md` in `vercel-react-best-practices`. `hagi` and `visualise` are not edited here, so their license statements are only in `THIRD-PARTY-NOTICES.md`.
 
 Not yet done: the release build copies only skill folders, the lock file and the plugin manifest, so `THIRD-PARTY-NOTICES.md` and `LICENSE` do not reach a release package.
 
