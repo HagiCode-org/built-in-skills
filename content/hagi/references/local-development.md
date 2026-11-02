@@ -21,8 +21,8 @@ Use the TypeScript entrypoint directly while changing behavior:
 
 ```bash
 cd repos/cli
-npm run dev -- proposal list --json
-npm run dev -- chat list --json
+pnpm run dev proposal list --json
+pnpm run dev chat list --json
 ```
 
 ### Release-style verification
@@ -31,7 +31,7 @@ Build the local distribution and run the bundled CLI:
 
 ```bash
 cd repos/cli
-npm run build
+pnpm run build
 node ./dist/cli.js --help
 node ./dist/cli.js proposal --help
 ```
@@ -43,23 +43,25 @@ Inspect these areas when implementation details matter:
 - `src/commands/` - command registration, flags, and request shaping
 - `src/runtime/` - API runtime, shared context, and error handling
 - `src/formatters/` - human-readable and JSON output formatting
-- `buildTools/` - OpenAPI client generation scripts
+- `buildTools/` - gRPC stub generation and DTO type generation scripts
 - `scripts/verify-package.mjs` - publish-surface verification
 
 ## API client generation
 
-The CLI owns its OpenAPI generation configuration.
-Use these commands when the backend schema changes:
+The CLI calls the backend over gRPC-Web (`<base-url>/grpc`). The stubs in `src/generated/grpc` come from the proto contracts in `repos/hagicode-core/protos`.
+Use these commands when a proto changes:
 
 ```bash
 cd repos/cli
-npm run generate:api
-npm run generate:api:once
+pnpm run generate:grpc
+pnpm run generate:grpc:check
 ```
 
-Default Swagger source:
+`HAGICODE_PROTO_DIR` points generation at another checkout of the protos.
 
-- `http://127.0.0.1:35168/swagger/v1/swagger.json`
+The DTO types in `src/generated/api/models` are committed and maintained by hand (types only, no REST client). They are no longer
+generated: the backend's OpenAPI document now lists only the retained REST routes, so regenerating from it would delete the
+types of every removed route. When a proto DTO changes, edit or add the matching type there.
 
 ## Release automation
 
@@ -68,10 +70,10 @@ For a stable release dry run, use:
 
 ```bash
 cd repos/cli
-version="$(npm run --silent publish:verify-release -- v0.1.0)"
+version="$(pnpm run --silent publish:verify-release -- v0.1.0)"
 npm version --no-git-tag-version "$version"
-npm run build
-npm run typecheck
-npm test
-npm run pack:check
+pnpm run build
+pnpm run typecheck
+pnpm test
+pnpm run pack:check
 ```

@@ -36,7 +36,8 @@ hagi --help
 hagi project list --json
 hagi proposal list --json
 hagi chat list --json
-hagi autotask create --title "Auto commit" --project-id <project-id> --prompt-id auto-compose-commit.en-US
+hagi hagitask list --json
+hagi hagitask create --title "Auto commit" --project-id <project-id> --prompt-id auto-compose-commit.en-US
 ```
 
 ## Shared runtime flags
@@ -82,17 +83,101 @@ There is no default. When none of the three is set, the CLI exits with code `2` 
 
 ```text
 hagi
-|-- project   list | create | update | delete
-|-- proposal  list | create | optimize-description | generate | annotate | execute | archive | status | complete | send
+|-- project   list | repositories | create | update | delete
+|   `-- monospecs show | init | set | validate | reload | clone | remove-checkout
+|-- proposal  list | create | optimize-description | generate | annotate | execute | archive | status | complete | send | get | messages
 |-- vault     list | create | update | delete
 |   `-- files list | preview
 |-- chat      list | create | archive | delete | send
-|-- autotask  create | send
+|-- hagitask  list | schema | create | send | get | messages
 |-- plan      list | get | create | update | enable | disable | delete | run
-`-- skills    local list | uninstall
+`-- skills    local list | enable | disable | uninstall
               gallery search | detail | install
               trusted list | upsert | delete | reset
 ```
+
+## Project repositories
+
+`project repositories --id <project-id>` is read-only. It reads the same aggregation snapshot as `project list` and prints one project's repositories: name, path relative to the project root (for example `repos/cli`), display name, type and branch, with the project's MonoSpecs flag. The `path` values are the ones a proposal's `Repository scope` names.
+
+```bash
+npx @hagicode/cli project repositories --id <project-id> --json
+```
+
+An unknown project id exits with code `24` and prints no list.
+
+## MonoSpecs commands
+
+`project monospecs` manages a project's MonoSpecs configuration (`monospecs.yaml`) and the local checkouts of its repositories. The CLI only sends requests; the backend reads and writes files and runs Git on its own host.
+
+- `show --id <id>` prints the document: version, repo directory, config path, commit-when-archive, and one row per repository with its local Git state. A repository that is not a valid Git checkout is marked `missing or not a Git repository`. `--yaml` adds the YAML preview; `--json` emits the same fields plus `code` and `metadata`.
+- `init --id <id>` initializes the configuration; an already initialized project returns its document.
+- `set --id <id>` changes the document. Options: `--version`, `--repo-directory`, `--commit-when-archive <true|false>`, repeatable `--add-repository <path>` and `--remove-repository <path>`, `--clone`. `--url`, `--name`, `--display-name` and `--type` require exactly one `--add-repository`. `--clone` needs at least one addition. The CLI reads the document, applies the change and saves the complete document; it strips local Git state fields before saving. Duplicate additions and unknown removals fail before any save.
+- `validate --id <id>` validates the configuration. It exits `30` when the backend reports it invalid, after printing every error.
+- `reload --id <id>` rereads `monospecs.yaml` on the backend host and refreshes Git state.
+- `clone --id <id>` clones missing repositories. Repeat `--path <path>` to select some; `--include-optional` adds optional repositories when no `--path` is given. Every result row is printed; any `failed` row exits `30`.
+- `remove-checkout --id <id> --path <path>` deletes one configured repository's local checkout. Dirty, unpushed or no-upstream checkouts are refused (exit `29`); the hint suggests `--force` when the refusal can be overridden. The configuration file is not changed.
+
+Only configured repositories can be cloned or removed, and the backend confines paths to the project root. Exit codes: `2` usage (no request sent), `20` backend validation with field errors, `24` project not found, `29` conflict, `30` invalid configuration or failed clone.
+
+```bash
+hagi project monospecs show --id <project-id> --json
+hagi project monospecs set --id <project-id> --add-repository repos/api --url <git-url> --clone
+hagi project monospecs remove-checkout --id <project-id> --path repos/api --force
+```
+
+## Proposal commands
+
+`proposal get` reads one proposal session. With `--wait` it polls until the status settles, so a stage can be followed without guessing. `proposal messages` reads its messages, newest first.
+
+```bash
+hagi proposal get --session-id <session-id> --wait --timeout 900 --json
+hagi proposal messages --session-id <session-id> --last 1 --json
+```
+
+- `--wait` settles on any status other than Optimizing, Openspecing, Executing or Archiving. WaitingForReply counts as settled, because a person must answer.
+- `--timeout`, `--interval` and `--grace` are seconds and need `--wait`. `--interval` must be less than `--timeout`. A timeout exits `31`.
+- Which stage each command starts, and how to follow a run, is in [openspec-workflow.md](openspec-workflow.md).
+
+## HagiTask commands
+
+A HagiTask is a preset task with a structured input. Use the schema-first flow: list the tasks, read one task's schema, write the input file from the schema, then create the session.
+
+```bash
+hagi hagitask list --json
+hagi hagitask schema --task-id <task-id>
+hagi hagitask schema --task-id <task-id> --json
+hagi hagitask create --title "<title>" --project-id <project-id> --task-id <task-id> --input input.json --json
+hagi hagitask get --session-id <session-id> --wait --json
+hagi hagitask messages --session-id <session-id> --last 1 --json
+hagi hagitask send --session-id <session-id> --content "Retry with a smaller diff"
+```
+
+`hagi hagitask get` and `hagi hagitask messages` take the same options as the proposal commands above.
+
+Super Commit is a prompt, not a preset task, so it has no schema and takes no `--input`. Start it with a prompt id:
+
+```bash
+hagi hagitask create --title "Commit the CLI changes" --project-id <project-id> --prompt-id auto-compose-commit.en-US --json
+```
+
+Start one only when the user asked for it. See [super-commit.md](super-commit.md) for its options, its result and when to start it.
+
+- `schema` (human view) lists the target scope, commands and parameters, with each required parameter marked `yes`, then the requirements, scenes, endpoint and an example command. `--json` adds the input JSON Schema and the example request body.
+- `create` needs `--title`, `--project-id`, and either `--task-id` or `--prompt-id`. `--input <file|->` needs `--task-id`. The input must be a JSON object. The CLI does not check its keys; the backend does, and it rejects a key that the schema does not list and a missing required value. A rejection is printed unchanged and no session is reported.
+- `create --json` prints `{ session, presetTaskId, promptId, requested }`. Read the session id from `session.sessionId`.
+
+Example `input.json` for a task with one required input:
+
+```json
+{
+  "inputs": {
+    "commitScope": "cli"
+  }
+}
+```
+
+Migration: `hagi hagitask create` and `hagi hagitask send` replace the former `autotask` commands. There is no alias, so `hagi autotask` fails as an unknown command.
 
 ## Plan commands
 
@@ -133,9 +218,25 @@ A one-time proposal plan document for `plan create --input`:
 
 The README's `## Plan Commands` section has a recurring HagiTask example and the full `update`, `enable`, `disable` and `delete` workflow.
 
+## Skills commands
+
+`skills local list` shows each installed skill with its origin (`user` or `built-in`), its enabled state for built-in skills (`yes` or `no`, shown as `-` for user skills), its version, scope, agents and path. `--json` returns the same data with the `origin` and `builtIn` fields.
+
+```bash
+hagi skills local list
+hagi skills local list --json
+hagi skills local enable --skill-name hagi
+hagi skills local disable --skill-name hagi --json
+```
+
+- `enable` and `disable` take `--skill-name` and change one built-in skill. They apply to agent runs that start afterwards.
+- `uninstall` removes a user skill. Built-in skills cannot be uninstalled; use `disable` to stop one from loading.
+- Skill recommendation and install progress streaming are not part of the CLI. `skills gallery search`, `detail` and `install` are the discovery and install path.
+- `skills gallery detail` adds skills.sh audit ratings. `--json` keeps the detail fields and adds `audit: { providers: [...] }`, one entry per provider with `provider` and, when supplied, `risk`, `alerts`, `score` and `analyzedAt`. Human output appends one `skills.sh audit (<provider>)` line per provider, with `--` for missing values. If the audit fails or has no data, the command still exits `0` and `audit.providers` is `[]`. A detail failure fails the command as before. The audit never changes the install command preview or installability.
+
 ## Exit codes
 
-Stable non-zero exits used by the CLI:
+Stable non-zero exits used by the CLI. The HTTP numbers are the equivalents of the gRPC status the backend answered with:
 
 | Exit code | Meaning |
 | --- | --- |
@@ -145,6 +246,8 @@ Stable non-zero exits used by the CLI:
 | `23` | HTTP 403 |
 | `24` | HTTP 404 |
 | `29` | HTTP 409 |
+| `30` | Operation failed: the backend returned a refusal, for example `skills local enable` or `disable` on a name that is not a built-in skill, an invalid MonoSpecs configuration, or a failed MonoSpecs clone |
+| `31` | Wait timed out: `--wait` on `proposal get` or `hagitask get` reached `--timeout` before the session settled. The last status is printed. Not a success, and not a backend error |
 | `40` | Other HTTP 4xx |
 | `50` | HTTP 5xx |
 | `60` | Transport or connection failure |
