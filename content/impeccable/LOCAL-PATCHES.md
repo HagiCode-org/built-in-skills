@@ -1,6 +1,6 @@
 # Local patches
 
-This folder is a copy of `pbakaus/impeccable`, path `.agents/skills/impeccable`, at ref `936867543ac2576920d663cc9803597f6044f3ac` (version 4.7.1). The files listed below differ from that upstream ref. Every other upstream file is kept byte-for-byte.
+This folder is a copy of `pbakaus/impeccable`, path `.agents/skills/impeccable`, at ref `c3c94b960276a42a235d1ff68e9954a342e5407e` (version 4.8.0). The files listed below differ from that upstream ref. Every other upstream file is kept byte-for-byte.
 
 ## Patched upstream files
 
