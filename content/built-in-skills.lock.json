@@ -7,84 +7,84 @@
       "source": {
         "type": "github",
         "repository": "HagiCode-org/cli",
-        "ref": "e4223c6c37766fd6e278da9080ae4d9ef651fced",
+        "ref": "c7a4f4469d483431aade95af1605c666711798fa",
         "path": "skills/hagi"
       },
-      "contentHash": "sha256:6b5797c407c860841f178245a2d1239c9449a0efdcc5acaed9c457b0d45b62f8"
+      "contentHash": "sha256:aec5db6f466dde23a47e04c789d7c83105e50a9bd8746295996912291a947e36"
     },
     {
       "slug": "impeccable",
-      "version": "4.7.1",
+      "version": "4.8.0",
       "source": {
         "type": "github",
         "repository": "pbakaus/impeccable",
-        "ref": "936867543ac2576920d663cc9803597f6044f3ac",
+        "ref": "c3c94b960276a42a235d1ff68e9954a342e5407e",
         "path": ".agents/skills/impeccable"
       },
-      "contentHash": "sha256:42ff40dde4dd430308eff575f5f6c4ef0549b38bcb93ebc9f71074846c94ef10"
+      "contentHash": "sha256:beffd51b0ca7a71b38f67bc03ffb76c23039dc7741be459013737a0b0500ff52"
     },
     {
       "slug": "ponytail",
-      "version": "5.3.2",
+      "version": "5.3.3",
       "source": {
         "type": "github",
         "repository": "dietrichgebert/ponytail",
-        "ref": "16352ac229eb08a9598dcae48fe9f2b342567d86",
+        "ref": "96608e078b2d5ea607c5c3b8b5a54d1c1fba6846",
         "path": "skills/ponytail"
       },
       "contentHash": "sha256:f1e2f015ee231b977bf5f382afe723e784262a7c46f7571ec0db6e6b4826489a"
     },
     {
       "slug": "ponytail-audit",
-      "version": "5.3.2",
+      "version": "5.3.3",
       "source": {
         "type": "github",
         "repository": "dietrichgebert/ponytail",
-        "ref": "16352ac229eb08a9598dcae48fe9f2b342567d86",
+        "ref": "96608e078b2d5ea607c5c3b8b5a54d1c1fba6846",
         "path": "skills/ponytail-audit"
       },
       "contentHash": "sha256:fe02755b91ba862fdbed615b6a1efa980ad62678dd7ea55ad288f2ba6b96b2c8"
     },
     {
       "slug": "ponytail-debt",
-      "version": "5.3.2",
+      "version": "5.3.3",
       "source": {
         "type": "github",
         "repository": "dietrichgebert/ponytail",
-        "ref": "16352ac229eb08a9598dcae48fe9f2b342567d86",
+        "ref": "96608e078b2d5ea607c5c3b8b5a54d1c1fba6846",
         "path": "skills/ponytail-debt"
       },
       "contentHash": "sha256:b39660718b1ee7fa8a8768e551341aca76bf4e066d094934417cc5a217989bec"
     },
     {
       "slug": "ponytail-gain",
-      "version": "5.3.2",
+      "version": "5.3.3",
       "source": {
         "type": "github",
         "repository": "dietrichgebert/ponytail",
-        "ref": "16352ac229eb08a9598dcae48fe9f2b342567d86",
+        "ref": "96608e078b2d5ea607c5c3b8b5a54d1c1fba6846",
         "path": "skills/ponytail-gain"
       },
       "contentHash": "sha256:ff554ac16839bb34becfaad1df3082bc5b3a555d54486e87c7fa23cf0e8010e9"
     },
     {
       "slug": "ponytail-help",
-      "version": "5.3.2",
+      "version": "5.3.3",
       "source": {
         "type": "github",
         "repository": "dietrichgebert/ponytail",
-        "ref": "16352ac229eb08a9598dcae48fe9f2b342567d86",
+        "ref": "96608e078b2d5ea607c5c3b8b5a54d1c1fba6846",
         "path": "skills/ponytail-help"
       },
       "contentHash": "sha256:b1dfa473d31e27cb4462d4a788e42754e35d4f41f86b9c38818ca4ae93b354bd"
     },
     {
       "slug": "ponytail-review",
-      "version": "5.3.2",
+      "version": "5.3.3",
       "source": {
         "type": "github",
         "repository": "dietrichgebert/ponytail",
-        "ref": "16352ac229eb08a9598dcae48fe9f2b342567d86",
+        "ref": "96608e078b2d5ea607c5c3b8b5a54d1c1fba6846",
         "path": "skills/ponytail-review"
       },
       "contentHash": "sha256:667d4fe15fb1f4f081845282dfe725a186390daeb461bc1090ee89d55b8b4e40"
@@ -106,7 +106,7 @@
       "source": {
         "type": "github",
         "repository": "vercel-labs/agent-skills",
-        "ref": "063bee94c3f4df8453406c830b0a7df0f2860278",
+        "ref": "1a2c79d4e6c4a2283dc2c614b6538cbe1ed5ca62",
         "path": "skills/react-best-practices"
       },
       "contentHash": "sha256:bea1742c963b440085a8acb9cbc2b2d2b2a837b4b11941bf425ca0742e7737f2"
