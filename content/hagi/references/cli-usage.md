@@ -101,6 +101,7 @@ hagi
 |-- skills    local list | enable | disable | uninstall
 |             gallery search | detail | install
 |             trusted list | upsert | delete | reset
+|-- usage     limits [--provider] [--wait-until-above <percent> --max-wait <seconds> --jitter-seconds <seconds>]
 `-- agent     lock acquire | status | renew | heartbeat | release | requisition | list
 ```
 
@@ -342,6 +343,26 @@ hagi agent lock list --prefix eu-1/
 - Timing: 10-minute feedback timeout, 24-hour maximum hold, 2-minute heartbeat interval, 30-second claim window, 60-second waiter TTL.
 - Never run `requisition` unless the user explicitly ordered a forced take.
 
+## Usage commands
+
+`hagi usage limits` reads the backend's Token Monitor usage: each provider's limit windows, with the remaining percent and the reset time of each. It is read-only and reads quota only from the backend, never from local files.
+
+```bash
+hagi usage limits --json
+hagi usage limits --provider claude --json
+hagi usage limits --provider claude --wait-until-above 10 --max-wait 480 --json
+```
+
+- `--provider <id>` keeps one provider, for example `claude` or `codex`.
+- `--wait-until-above <percent>` waits until every short window (six hours or less) of `--provider` is above that remaining percent. It requires `--provider`. Weekly windows are reported but never hold the wait. The wait sleeps toward the blocking window's reset, re-reads at least every 5 minutes, and stops after `--max-wait` seconds (default `1800`, at most `21600`; `0` checks once). A read that fails is retried three times, 30 seconds apart, within the same limit.
+- `--jitter-seconds <seconds>` (default `120`, at most `3600`; `0` disables) sets a random delay after a wait that ended `ready`, so runs that waited on the same reset do not start together. It applies only with `--wait-until-above`.
+- `--max-wait` and `--jitter-seconds` without `--wait-until-above` are refused with exit `2` before any backend call.
+- The JSON output has `state` (`ready`, `low`, or `unknown`; `null` for a plain read that has figures), `reason`, `windows` (each with `provider`, `kind`, `remainingPercent`, `resetsAtUtc`, `minutesToReset`, `windowMinutes`, `watched`) and `guard`, which is `null` for a plain read and otherwise holds `state`, `thresholdPercent`, `waitedSeconds`, `jitterSeconds`, `checkedAtUtc` and `blockers`.
+- Low quota is a successful reading: `ready` and `low` both exit `0`, so a shell chain does not stop on low quota. Read `state` (or `guard.state`) from `--json`, or the first word of the text (`READY`, `LOW`), to tell them apart. Only an unusable reading exits `34`.
+- The text output begins `READY`, `LOW`, `UNAVAILABLE` for a wait, and `READ` or `UNAVAILABLE` for a plain read. It names the blocking windows and their reset times, or the reason.
+
+The saga orchestrator runs this wait before every Worker it dispatches; see [`saga.md`](saga.md).
+
 ## Exit codes
 
 Stable non-zero exits used by the CLI. The HTTP numbers are the equivalents of the gRPC status the backend answered with:
@@ -357,6 +378,7 @@ Stable non-zero exits used by the CLI. The HTTP numbers are the equivalents of t
 | `30` | Operation failed: the backend returned a refusal, for example `skills local enable` or `disable` on a name that is not a built-in skill, an invalid MonoSpecs configuration, or a failed MonoSpecs clone |
 | `31` | Wait timed out: `--wait` on `proposal get`, `hagitask get` or `agent lock acquire` reached `--timeout` before the session settled. The last status is printed. Not a success, and not a backend error |
 | `32` | Lock lost: a `hagi agent lock` command learned that the owner no longer holds the lock (expired, taken back at the 24-hour cap, stale epoch, requisitioned). Stop using the resource. Distinct from `31` |
+| `34` | Quota unavailable: `hagi usage limits` could not read a usable figure, either on a plain read or after a wait's retries. Nothing is known about the quota, so none is claimed. Low quota is not this code: it exits `0` |
 | `40` | Other HTTP 4xx |
 | `50` | HTTP 5xx |
 | `60` | Transport or connection failure |

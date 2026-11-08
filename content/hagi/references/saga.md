@@ -248,6 +248,19 @@ Write and check commands accept `--json`. Success and refusal write one object t
 
 Human output prints a one-line outcome and one line per refusal reason.
 
+## Quota guard in a run
+
+The `run` method reads quota before every Worker it creates, with `hagi usage limits --wait-until-above <threshold> --provider <P> --max-wait 480 --json`. `<threshold>` defaults to `10`, and `<P>` is the provider the Worker spends. The read waits at most 480 seconds per call, then the orchestrator runs it again, and a dispatch that has waited six hours in total on quota pauses the Saga with the provider, remaining percent and reset time as the reason.
+
+- Exit `0` with `guard.state` `ready`: the Worker is dispatched.
+- Exit `0` with `guard.state` `low`: the Worker is held, which is not a failure and not a pause. The orchestrator records the reading and reads again.
+- Exit `34`: no usable figure. The orchestrator logs `quota unknown`, dispatches, and reads again before the next Worker.
+- Any other exit code pauses the Saga the same way a failed check does.
+
+Which provider a Worker spends follows its hero's executor. The run's options may carry `<provider-hints>`, pairs `<key>=<provider>` separated by commas, where `<key>` is a hero id or a Worker role (`implementation`, `verification`, `tuning`) and `<provider>` is a provider id such as `claude` or `codex`. For each Worker the orchestrator uses the hint for its hero id first, then the hint for its role, then the run's default `<provider>` (`claude` unless the run says otherwise). It uses the id exactly as written. The run's starter should write one hint for every hero whose executor is not the default provider, so a Worker of such a hero is read against the window it will actually spend. A missing or wrong hint reads the wrong window, so it costs an unnecessary hold or a `quota unknown` record, not a stalled run.
+
+Every heartbeat note and every dispatch or held-dispatch log line carries the reading it was made on: the provider, the remaining percent, the reset time and the seconds waited. A worker that stops because its provider's quota is exhausted is not a failed verification: it is not counted and not given to a tuning worker, and it is re-dispatched unchanged after the quota read for its own provider returns `ready`. The command itself is documented in [`cli-usage.md`](cli-usage.md#usage-commands).
+
 ## Runtime ignore precondition
 
 Before any command writes a file under a Saga's `runtime/` directory (`claim`, `set-status`, `tick`, `block`, `session create`,
