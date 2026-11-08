@@ -1,6 +1,6 @@
 ---
 name: hagi
-description: Use when the user wants to run, verify, or update the HagiCode CLI against the Hagi API, use local Saga initialization, creation, or read-only queries, or asks about their own projects, proposals, chat sessions, vaults, scheduled plans, or installed skills, including user skills versus built-in skills and enabling or disabling a built-in skill. Also covers the OpenSpec workflow behind proposal commands and Super Commit, which commits a code repository through a HagiTask session. Keep package-first command guidance primary, then follow the Saga, proposal, local development, and validation references as needed. Inside a HagiCode session, read the session-data reference first for questions about the user's own data.
+description: Use when the user wants to run, verify, or update the HagiCode CLI against the Hagi API, use local Saga initialization, creation, checks, writes, or read-only queries, or asks about their own projects, proposals, chat sessions, vaults, scheduled plans, or installed skills, including user skills versus built-in skills and enabling or disabling a built-in skill. Also covers the OpenSpec workflow behind proposal commands and Super Commit, which commits a code repository through a HagiTask session. Keep package-first command guidance primary, then follow the Saga, proposal, local development, and validation references as needed. Inside a HagiCode session, read the session-data reference first for questions about the user's own data.
 ---
 
 # Hagi
@@ -12,6 +12,8 @@ Use this skill when the user asks to:
 - enable or disable a built-in skill
 - run or verify the `hagi` CLI
 - run, explain, or verify local `saga init`, `saga new`, `saga list`, `saga status`, or `saga items` operations
+- read a published Saga method (`goal`, `research`, `acceptance`, `plan`, `run`, `amend`) with `saga method <name>`
+- run, explain, or verify local Saga ownership, checks, and writes: `claim`, `assert-owner`, `release`, `freeze`, `check`, `tick`, `block`, `set-status`, `amend`, `archive`, and `session create` (Saga Worker chat sessions)
 - explain or execute `project`, `proposal`, `chat`, `hagitask`, `vault`, `plan`, `skills`, or `saga` commands
 - explain the OpenSpec workflow behind `proposal` commands, which stage each command starts, or how to follow a run until it settles
 - take turns on a shared resource (a game server, a test environment) with other agents through `hagi agent lock`
@@ -39,7 +41,7 @@ Use this skill when the user asks to:
 5. Source-tree development in `repos/cli` -> read [`references/local-development.md`](references/local-development.md)
 6. Post-change validation -> read [`references/validation.md`](references/validation.md)
 7. The user's own data, inside a HagiCode session -> read [`references/session-data.md`](references/session-data.md)
-8. Local Saga initialization, creation, list, status, or item queries -> read [`references/saga.md`](references/saga.md)
+8. Local Saga initialization, creation, list, status, item queries, ownership, checks, freeze, ticks, status writes, amendments, archive, or creating and recording Saga Worker sessions (`session create`) -> read [`references/saga.md`](references/saga.md)
 9. A shared resource that other agents also use, or any `hagi agent lock` command -> read [`references/resource-lock.md`](references/resource-lock.md)
 
 When `hagi` is loaded as a built-in skill inside a HagiCode session, read item 7 first for any question about the user's own data or skills, before the other references.
@@ -88,7 +90,7 @@ The current top-level command families are:
 - `agent`
 - `saga`
 
-`hagi saga` provides `init`, `new`, `list`, `status`, and `items`. With `--path`, these operate on host-local files without reading backend configuration or calling the API; `--project-id` resolves a project through the backend. See [`references/saga.md`](references/saga.md) for initialization, creation, offline behavior, and read-only query guarantees.
+`hagi saga` provides `init`, `new`, `list`, `status`, and `items`, plus the write and check commands `claim`, `assert-owner`, `release`, `freeze`, `check`, `tick`, `block`, `set-status`, `amend`, and `archive`, and `session create`, which creates a Saga Worker chat session and records it. Mutating commands take `--token` or `SAGA_EXECUTION_TOKEN`; `session create` takes only `SAGA_EXECUTION_TOKEN`. With `--path`, these operate on host-local files without reading backend configuration or calling the API, except `session create`, which calls the backend to find the registered project; `--project-id` resolves a project through the backend. Creating a Worker changes state, so run `session create` only when the user or a Saga run explicitly asks for it. See [`references/saga.md`](references/saga.md) for initialization, creation, offline behavior, and read-only query guarantees.
 
 `project repositories --id <project-id>` is read-only. It lists one project's repositories with each path relative to the project root (for example `repos/cli`). Those paths are the values a proposal's `Repository scope` names; see [`references/proposal-flow.md`](references/proposal-flow.md#repository-scope).
 
@@ -121,6 +123,6 @@ Each family also reads one session by id. `proposal get` and `hagitask get` read
 - [`references/openspec-workflow.md`](references/openspec-workflow.md) - the OpenSpec stage each proposal command starts, stage boundaries, who drives each step, and the monitoring rule
 - [`references/super-commit.md`](references/super-commit.md) - Super Commit: starting it by prompt id, its options, result reading and the explicit-request rule
 - [`references/resource-lock.md`](references/resource-lock.md) - the shared resource lock: numbers, owner, exit codes, the watcher protocol, the seven agent rules and requisition
-- [`references/saga.md`](references/saga.md) - local initialization, creation, and read-only Saga queries
+- [`references/saga.md`](references/saga.md) - local initialization, creation, ownership, checks, Saga writes, Saga Worker sessions (`session create`), and read-only queries
 - [`references/local-development.md`](references/local-development.md) - maintainer-only development, build, and repository internals
 - [`references/validation.md`](references/validation.md) - targeted verification after documentation or code changes

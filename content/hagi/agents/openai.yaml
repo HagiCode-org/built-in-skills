@@ -1,7 +1,7 @@
 interface:
   display_name: "Hagi CLI"
   short_description: "Operate the hagi CLI, including local Saga commands, and work with HagiCode data, skills, proposals, and Super Commit."
-  default_prompt: "Use $hagi to operate local Saga init, new, list, status, or items commands; look up HagiCode projects, proposals, sessions, vaults, plans, or skills; follow a proposal's OpenSpec workflow; run a Super Commit; enable or disable a built-in skill; or inspect, run, or update the CLI in repos/cli."
+  default_prompt: "Use $hagi to operate local Saga init, new, list, status, or items commands and the Saga ownership, check, freeze, tick, set-status, amend, and archive commands; look up HagiCode projects, proposals, sessions, vaults, plans, or skills; follow a proposal's OpenSpec workflow; run a Super Commit; enable or disable a built-in skill; or inspect, run, or update the CLI in repos/cli."
 
 policy:
   allow_implicit_invocation: true
