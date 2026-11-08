@@ -7,21 +7,21 @@
       "source": {
         "type": "github",
         "repository": "HagiCode-org/cli",
-        "ref": "c7a4f4469d483431aade95af1605c666711798fa",
+        "ref": "ca1fb0eaf7e280436aff4e37f816f59df49e2c8f",
         "path": "skills/hagi"
       },
-      "contentHash": "sha256:aec5db6f466dde23a47e04c789d7c83105e50a9bd8746295996912291a947e36"
+      "contentHash": "sha256:2269ef95cb94e42c770886a013313c194055a72912c13465a2492197521f25c5"
     },
     {
       "slug": "impeccable",
-      "version": "4.8.0",
+      "version": "4.8.1",
       "source": {
         "type": "github",
         "repository": "pbakaus/impeccable",
-        "ref": "c3c94b960276a42a235d1ff68e9954a342e5407e",
+        "ref": "924bbd194d02e5e15a227e75b5901fb0d7a4ecad",
         "path": ".agents/skills/impeccable"
       },
-      "contentHash": "sha256:beffd51b0ca7a71b38f67bc03ffb76c23039dc7741be459013737a0b0500ff52"
+      "contentHash": "sha256:ebb386e3f584429f69e3b29d853580e928931af973f37151b054b047dcecdc82"
     },
     {
       "slug": "ponytail",
@@ -91,11 +91,11 @@
     },
     {
       "slug": "systematic-debugging",
-      "version": "7.0.1",
+      "version": "7.0.2",
       "source": {
         "type": "github",
         "repository": "obra/superpowers",
-        "ref": "2ce8aa15d05bd57213e6f746f953aafb7ded7a8b",
+        "ref": "22f0b463e7a5e579904dd6211a520321035526f7",
         "path": "skills/systematic-debugging"
       },
       "contentHash": "sha256:6764be4d9160ee51e897bdda91efb024fb5467e9050b069b426c8b6e7703afd4"
@@ -113,11 +113,11 @@
     },
     {
       "slug": "verification-before-completion",
-      "version": "7.0.1",
+      "version": "7.0.2",
       "source": {
         "type": "github",
         "repository": "obra/superpowers",
-        "ref": "2ce8aa15d05bd57213e6f746f953aafb7ded7a8b",
+        "ref": "22f0b463e7a5e579904dd6211a520321035526f7",
         "path": "skills/verification-before-completion"
       },
       "contentHash": "sha256:3088e9a23251de33062fb8cd71701babb3c2730375c0ad795d6b3cb454c3d6da"
