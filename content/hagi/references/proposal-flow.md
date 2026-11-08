@@ -173,6 +173,33 @@ npx @hagicode/cli proposal complete --session-id <session-id>
 npx @hagicode/cli proposal send --session-id <session-id> --content "Please continue"
 ```
 
+## Session metadata
+
+`proposal create` accepts `--metadata key=value` (repeatable) and `--metadata-json <file|->` (a JSON object of string values; `-` reads stdin). Use them to mark the sessions of one orchestrated run: a master marker on the orchestrator and worker markers on each proposal, so the run can find its sessions again.
+
+```bash
+MASTER_ID=$(hagi chat create --title "Batch master" --project-id <project-id> --metadata role=master --metadata batch=2026-11-07 --json | json_field '.session.sessionId')
+
+hagi proposal create \
+  --project-id <project-id> \
+  --chief-complaint "Repository scope
+Writable repositories:
+- repos/web
+Read-only repositories:
+- none
+
+Tighten the settings page copy" \
+  --default-title \
+  --metadata role=worker \
+  --metadata master="$MASTER_ID" \
+  --json
+```
+
+- Keys: 1 to 64 characters matching `^[a-z][a-z0-9._-]{0,63}$`. Values: 1 to 512 characters with no control characters. At most 16 entries. The backend checks these and its message is shown as it is.
+- Each key appears once across both options. A repeat, a missing `=`, or a non-string JSON value exits `2` with no request sent.
+- Metadata is write-once and visible to every reader of the session. Do not put secrets in it.
+- The output `session` object carries `userMetadata` when the session has entries. Read it to confirm the markers were stored.
+
 ## Validation focus
 
 After each lifecycle step:

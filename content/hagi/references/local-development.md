@@ -63,6 +63,24 @@ The DTO types in `src/generated/api/models` are committed and maintained by hand
 generated: the backend's OpenAPI document now lists only the retained REST routes, so regenerating from it would delete the
 types of every removed route. When a proto DTO changes, edit or add the matching type there.
 
+## Saga asset bundle
+
+The canonical Saga source is read-only at `../personal-agent-skills/long-running-orchestration/`. The CLI bundle lives in
+`resources/saga/` and contains the six prompt files, `tools/saga.mjs`, `.gitignore`, and `manifest.json`. Copy assets as
+raw bytes: do not render templates or normalize line endings. The manifest uses schema version `1` and sorted POSIX
+relative paths mapped to lowercase SHA-256 digests; it does not hash itself.
+
+Run the offline synchronization commands from `repos/cli`:
+
+```bash
+pnpm run saga:assets:sync
+pnpm run saga:assets:check
+```
+
+Synchronization changes only the CLI bundle and leaves identical files untouched. The check reports missing, differing,
+unexpected, or incorrectly hashed resources without writing. To check a separate local source checkout, invoke
+`node scripts/sync-saga-assets.mjs --skill <directory> --check` from `repos/cli`.
+
 ## Release automation
 
 GitHub workflows under `.github/workflows/` handle release drafting and npm publishing.

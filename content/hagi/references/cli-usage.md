@@ -35,6 +35,7 @@ For one-off execution, replace `hagi` with `npx @hagicode/cli`.
 hagi --help
 hagi project list --json
 hagi proposal list --json
+hagi saga list --path .
 hagi chat list --json
 hagi hagitask list --json
 hagi hagitask create --title "Auto commit" --project-id <project-id> --prompt-id auto-compose-commit.en-US
@@ -55,9 +56,11 @@ Example:
 hagi --base-url https://api.example.com --token "$HAGI_TOKEN" project list --json
 ```
 
+Saga commands using `--path` accept these flags but do not read backend configuration or contact the backend.
+
 ## Environment variables
 
-The CLI resolves runtime settings centrally before every command.
+Backend operations resolve runtime settings centrally before accessing the API.
 Explicit flags always override environment variables.
 
 | Variable | Purpose |
@@ -65,19 +68,22 @@ Explicit flags always override environment variables.
 | `HAGI_API_BASE_URL` | Backend base URL, used when `--base-url` is not given. Overrides the config file. |
 | `HAGI_API_TOKEN` | Bearer token attached as `Authorization: Bearer <token>`. |
 | `HAGI_API_LANG` | Shared `Accept-Language` header value. |
+| `HAGI_SEND_STEER` | Turns Steer on (`1`, `true`, `yes`, `on`) or off (`0`, `false`, `no`, `off`) for `chat`, `proposal` and `hagitask send`. Any other value exits with code `2`. See [Steer for send commands](#steer-for-send-commands). |
 
 ## Config file
 
 The base URL can also be stored in a local config file:
 
 ```json
-{ "baseUrl": "https://api.example.com" }
+{ "baseUrl": "https://api.example.com", "steer": false }
 ```
 
-The file is `$XDG_CONFIG_HOME/hagi/config.json`, or `~/.config/hagi/config.json` when `XDG_CONFIG_HOME` is unset.
+The file is `$XDG_CONFIG_HOME/hagi/config.json`, or `~/.config/hagi/config.json` when `XDG_CONFIG_HOME` is unset. The `steer` key must be `true` or `false`; any other value exits with code `2` and names the file.
 
 Base URL precedence, highest first: `--base-url`, then `HAGI_API_BASE_URL`, then `baseUrl` in the config file.
-There is no default. When none of the three is set, the CLI exits with code `2` and names all three sources.
+There is no default. When none of the three is set, a backend operation exits with code `2` and names all three sources.
+The local Saga selector `--path` is the exception: it does not read this file, so malformed, unreachable, or absent backend
+settings do not affect that local operation.
 
 ## Command overview
 
@@ -86,15 +92,41 @@ hagi
 |-- project   list | repositories | create | update | delete
 |   `-- monospecs show | init | set | validate | reload | clone | remove-checkout
 |-- proposal  list | create | optimize-description | generate | annotate | execute | archive | status | complete | send | get | messages
+|-- saga      init | new | list | status | items
 |-- vault     list | create | update | delete
 |   `-- files list | preview
 |-- chat      list | create | archive | delete | send
 |-- hagitask  list | schema | create | send | get | messages
 |-- plan      list | get | create | update | enable | disable | delete | run
-`-- skills    local list | enable | disable | uninstall
-              gallery search | detail | install
-              trusted list | upsert | delete | reset
+|-- skills    local list | enable | disable | uninstall
+|             gallery search | detail | install
+|             trusted list | upsert | delete | reset
+`-- agent     lock acquire | status | renew | heartbeat | release | requisition | list
 ```
+
+## Saga commands
+
+Each command requires exactly one nonempty project selector:
+
+- `--path <directory>` resolves a local directory on the CLI host. Relative paths use the current working directory. This
+  selector does not read backend configuration or make API calls, and shared backend flags do not change its behavior.
+- `--project-id <id>` reads the project list through the configured backend. Its project path must be a directory available
+  on the machine running the CLI; the CLI does not execute filesystem operations remotely.
+
+Missing, empty, or conflicting selectors exit `2` before backend access or file writes. Paths with spaces should be quoted.
+Shared `--base-url`, `--token`, `--lang`, and `--json` options are accepted.
+
+```bash
+hagi saga init --path "./My Project"
+hagi saga new demo --path "./My Project" --json
+hagi saga list --path "./My Project"
+hagi saga status demo --project-id <project-id> --json
+hagi saga items demo --path "./My Project" --json
+```
+
+For offline use, invoke an installed package or a package already present in the `npx` cache. An uncached
+`npx @hagicode/cli` command may need network access to download the package; the local `--path` operation itself does not
+need backend access.
 
 ## Project repositories
 
@@ -139,6 +171,24 @@ hagi proposal messages --session-id <session-id> --last 1 --json
 - `--timeout`, `--interval` and `--grace` are seconds and need `--wait`. `--interval` must be less than `--timeout`. A timeout exits `31`.
 - Which stage each command starts, and how to follow a run, is in [openspec-workflow.md](openspec-workflow.md).
 
+## Session metadata
+
+`chat create` and `proposal create` take write-once metadata entries. An orchestrator marks the sessions it starts with them, for example a master marker and worker markers, and finds them again through `userMetadata`.
+
+```bash
+hagi chat create --title "Master" --project-id <project-id> --metadata role=master --metadata batch=2026-11-07 --json
+hagi chat create --title "Worker 1" --project-id <project-id> --metadata role=worker --metadata master=<master-session-id> --json
+printf '{"role":"worker","master":"<master-session-id>"}' | hagi chat create --title "Worker 2" --project-id <project-id> --metadata-json - --json
+hagi proposal create --project-id <project-id> --chief-complaint "<text>" --default-title --metadata role=worker --metadata master=<master-session-id> --json
+```
+
+- `--metadata key=value` is repeatable. The text is split at the first `=`, so a value may contain `=`.
+- `--metadata-json <file|->` reads a JSON object of string values from a file, or from stdin with `-`. It is repeatable.
+- A key may appear once across both options. A missing `=`, an empty key, a repeated key, or JSON that is not an object of string values exits `2` before any request is sent.
+- Backend limits: at most 16 entries; a key of 1 to 64 characters matching `^[a-z][a-z0-9._-]{0,63}$`; a value of 1 to 512 characters with no control characters. The backend's message is printed as it is, and the session is not created.
+- Write-once: the entries are set at creation and cannot be changed later. Do not put secrets in them: every reader of the session can see them.
+- Output: `--json` of `chat create`, `chat list`, `proposal create` and `proposal get` carries `userMetadata` (an object of string values) when the session has entries. The human output adds one `userMetadata` line, keys sorted. A session without entries has no `userMetadata` field.
+
 ## HagiTask commands
 
 A HagiTask is a preset task with a structured input. Use the schema-first flow: list the tasks, read one task's schema, write the input file from the schema, then create the session.
@@ -178,6 +228,33 @@ Example `input.json` for a task with one required input:
 ```
 
 Migration: `hagi hagitask create` and `hagi hagitask send` replace the former `autotask` commands. There is no alias, so `hagi autotask` fails as an unknown command.
+
+## Steer for send commands
+
+`hagi chat send`, `hagi proposal send` and `hagi hagitask send` have two delivery modes. A normal send waits behind the running turn, as before. A Steer inserts the text into the running turn through one `SteerSession` call. Steer is off by default.
+
+Options: `--steer` requests Steer for one call; `--no-steer` forces a normal send for one call. Without either flag, the first set source decides: `HAGI_SEND_STEER` (values above), then the `steer` config key, then `false`. `--no-steer` overrides `HAGI_SEND_STEER=1`.
+
+Outcomes:
+
+- `steered`: a running task took the message. It is not proof the text was used; the backend can requeue it when the run ends.
+- `queued`: no running task took it, so it was sent as the next message. Exit code `0`. An idle session also answers `queued`, and the message then starts a run at once, so do not read `queued` as "waiting".
+
+```bash
+hagi chat send --session-id <session-id> --content "Check the diff" --steer --json
+```
+
+The `--json` output keeps `sessionId`, `message` and `requested`, and adds a `steer` object: `{ requested, source, effective, outcome?, messageId?, reason? }`. `source` is `flag`, `env`, `config` or `default`. On the Steer path `message` is `Steered` or `Queued`. `reason` appears only when Steer was requested but not used.
+
+Conflicts and fallback:
+
+- `--steer` with `--mode` or `--executor-type` exits with code `2` and sends nothing.
+- Steer from `HAGI_SEND_STEER` or the config file, combined with `--mode` or `--executor-type`, sends a normal message with those options and sets `reason`.
+- Steer from `HAGI_SEND_STEER` or the config file, against a backend without `SteerSession`, sends a normal message with the reason `the backend does not support Steer`. An explicit `--steer` returns the backend error instead.
+
+A queued Steer is always sent in `Edit` mode. To keep another mode, use `--no-steer --mode <mode>`.
+
+For unattended session-to-session messages, set `HAGI_SEND_STEER=1` in the orchestrator's environment. Use `--no-steer` on a single call that must take the normal queue.
 
 ## Plan commands
 
@@ -234,6 +311,28 @@ hagi skills local disable --skill-name hagi --json
 - Skill recommendation and install progress streaming are not part of the CLI. `skills gallery search`, `detail` and `install` are the discovery and install path.
 - `skills gallery detail` adds skills.sh audit ratings. `--json` keeps the detail fields and adds `audit: { providers: [...] }`, one entry per provider with `provider` and, when supplied, `risk`, `alerts`, `score` and `analyzedAt`. Human output appends one `skills.sh audit (<provider>)` line per provider, with `--` for missing values. If the audit fails or has no data, the command still exits `0` and `audit.providers` is `[]`. A detail failure fails the command as before. The audit never changes the install command preview or installability.
 
+## Agent lock commands
+
+`hagi agent lock` takes turns on a shared resource with other agents. The full protocol, the numbers and the seven agent rules are in [`resource-lock.md`](resource-lock.md); read it before using these commands. There is no top-level `hagi lock`.
+
+```bash
+hagi agent lock acquire --lock-id eu-1/duckov --owner sess-7f2c
+hagi agent lock acquire --server eu-1 --game duckov --owner sess-7f2c --wait --timeout 900
+hagi agent lock status --lock-id eu-1/duckov --owner sess-7f2c --json
+hagi agent lock heartbeat --lock-id eu-1/duckov --owner sess-7f2c --epoch 7
+hagi agent lock renew --lock-id eu-1/duckov --owner sess-7f2c --epoch 7
+hagi agent lock release --lock-id eu-1/duckov --owner sess-7f2c --epoch 7
+hagi agent lock requisition --lock-id eu-1/duckov --owner sess-7f2c --reason "User order: take the lock now"
+hagi agent lock list --prefix eu-1/
+```
+
+- Name the lock with `--lock-id <id>` or with `--server <name> --game <name>` (not both forms). The owner is your own session ID, passed as `--owner`; without it the CLI reads `HAGI_LOCK_OWNER`, then `HAGI_SESSION_ID`, and otherwise exits `2`.
+- `acquire` takes `--wait`, `--timeout <seconds>` (default 900, needs `--wait`), `--lease-seconds <n>` and `--label <text>`. Without `--wait` it exits `0` for `Holding` and `Queued`. With `--wait` it exits `0` only when the owner holds the lock, `31` on timeout and `32` when the queue entry was dropped.
+- `status` takes `--wait-seconds <n>`. `renew` and `heartbeat` take `--epoch <n>` and `--lease-seconds <n>`; `heartbeat` also takes `--interval <seconds>` (default 120) and `--verbose`. `release` takes `--epoch <n>`. `requisition` requires `--reason <text>` and takes `--label <text>`. `list` takes `--prefix <text>`.
+- `heartbeat` is long-running and quiet on success. Run it under a watcher; it exits `32` when the lock is lost and `0` when stopped, without releasing.
+- Timing: 10-minute feedback timeout, 24-hour maximum hold, 2-minute heartbeat interval, 30-second claim window, 60-second waiter TTL.
+- Never run `requisition` unless the user explicitly ordered a forced take.
+
 ## Exit codes
 
 Stable non-zero exits used by the CLI. The HTTP numbers are the equivalents of the gRPC status the backend answered with:
@@ -247,7 +346,8 @@ Stable non-zero exits used by the CLI. The HTTP numbers are the equivalents of t
 | `24` | HTTP 404 |
 | `29` | HTTP 409 |
 | `30` | Operation failed: the backend returned a refusal, for example `skills local enable` or `disable` on a name that is not a built-in skill, an invalid MonoSpecs configuration, or a failed MonoSpecs clone |
-| `31` | Wait timed out: `--wait` on `proposal get` or `hagitask get` reached `--timeout` before the session settled. The last status is printed. Not a success, and not a backend error |
+| `31` | Wait timed out: `--wait` on `proposal get`, `hagitask get` or `agent lock acquire` reached `--timeout` before the session settled. The last status is printed. Not a success, and not a backend error |
+| `32` | Lock lost: a `hagi agent lock` command learned that the owner no longer holds the lock (expired, taken back at the 24-hour cap, stale epoch, requisitioned). Stop using the resource. Distinct from `31` |
 | `40` | Other HTTP 4xx |
 | `50` | HTTP 5xx |
 | `60` | Transport or connection failure |
