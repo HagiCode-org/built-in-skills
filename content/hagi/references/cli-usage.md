@@ -56,7 +56,7 @@ Example:
 hagi --base-url https://api.example.com --token "$HAGI_TOKEN" project list --json
 ```
 
-Saga commands using `--path` accept these flags but do not read backend configuration or contact the backend.
+Saga commands using `--path` accept these flags but do not read backend configuration or contact the backend, except `saga session create`, which calls the backend to find the registered project.
 
 ## Environment variables
 
@@ -83,7 +83,7 @@ The file is `$XDG_CONFIG_HOME/hagi/config.json`, or `~/.config/hagi/config.json`
 Base URL precedence, highest first: `--base-url`, then `HAGI_API_BASE_URL`, then `baseUrl` in the config file.
 There is no default. When none of the three is set, a backend operation exits with code `2` and names all three sources.
 The local Saga selector `--path` is the exception: it does not read this file, so malformed, unreachable, or absent backend
-settings do not affect that local operation.
+settings do not affect that local operation. The one exception is `saga session create`, which calls the backend even with `--path`.
 
 ## Command overview
 
@@ -92,7 +92,7 @@ hagi
 |-- project   list | repositories | create | update | delete
 |   `-- monospecs show | init | set | validate | reload | clone | remove-checkout
 |-- proposal  list | create | optimize-description | generate | annotate | execute | archive | status | complete | send | get | messages
-|-- saga      init | new | list | status | items
+|-- saga      init | new | list | status | items | claim | assert-owner | release | freeze | check | tick | block | set-status | amend | archive | session create
 |-- vault     list | create | update | delete
 |   `-- files list | preview
 |-- chat      list | create | archive | delete | send
@@ -109,7 +109,8 @@ hagi
 Each command requires exactly one nonempty project selector:
 
 - `--path <directory>` resolves a local directory on the CLI host. Relative paths use the current working directory. This
-  selector does not read backend configuration or make API calls, and shared backend flags do not change its behavior.
+  selector does not read backend configuration or make API calls, except in `saga session create`, which looks up the
+  registered project through the backend. Shared backend flags do not change its behavior otherwise.
 - `--project-id <id>` reads the project list through the configured backend. Its project path must be a directory available
   on the machine running the CLI; the CLI does not execute filesystem operations remotely.
 
@@ -118,11 +119,19 @@ Shared `--base-url`, `--token`, `--lang`, and `--json` options are accepted.
 
 ```bash
 hagi saga init --path "./My Project"
+hagi saga method run --json
 hagi saga new demo --path "./My Project" --json
 hagi saga list --path "./My Project"
 hagi saga status demo --project-id <project-id> --json
 hagi saga items demo --path "./My Project" --json
+hagi saga claim demo --path "./My Project" --session orchestrator-1 --json
+hagi saga check demo --path "./My Project" --phase run --json
+hagi saga tick demo T1 --path "./My Project" --token "$SAGA_EXECUTION_TOKEN" --json
+hagi saga session create --saga demo --path "./My Project" --title "T1 implementation" --role implementation --master orchestrator-1 --item T1 --json
 ```
+
+`saga session create` takes its execution token from `SAGA_EXECUTION_TOKEN` only; `--token` is refused. It creates a Worker
+chat session and records it in `runtime/sessions.md`. See [`saga.md`](saga.md#worker-sessions) for its metadata, record and exit codes.
 
 For offline use, invoke an installed package or a package already present in the `npx` cache. An uncached
 `npx @hagicode/cli` command may need network access to download the package; the local `--path` operation itself does not

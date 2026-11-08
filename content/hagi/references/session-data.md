@@ -109,7 +109,7 @@ hagi saga items <saga-id> --project-id <project-id> --json
 These queries read the selected project's Saga files without initializing or repairing them, refreshing runtime status,
 or executing acceptance commands. Status is a fresh `saga-status/2` observation; its `updatedAt` is not the stored
 execution heartbeat in `runtime/status.json`. `init` installs resources and `new` creates a Saga, so run either only
-when the user explicitly asks for that change. Contract and lifecycle operations remain with the installed Saga tool.
+when the user explicitly asks for that change. Contract and lifecycle operations run through `hagi saga` with the execution token rules in `references/saga.md`.
 
 ### Skills
 
@@ -141,10 +141,12 @@ A question such as "what is in my plan" is not a request to run, enable, disable
 | `chat` | `create`, `archive`, `delete`, `send` |
 | `hagitask` | `create`, `send` |
 | `plan` | `create`, `update`, `enable`, `disable`, `delete`, `run` |
-| `saga` | `init`, `new` |
+| `saga` | `init`, `new`, `session create` |
 | `skills` | `local enable`, `local disable`, `local uninstall`, `gallery install`, `trusted upsert`, `trusted delete`, `trusted reset` |
 
 A `send` or `run` starts agent work, and `execute` and `generate` start it too. Treat those as changes of the same kind.
+
+`saga session create` creates a chat session for a Saga Worker and records it in the Saga's `runtime/sessions.md`. Creating a Worker changes state, so run it only when the user or a Saga run explicitly asks for it. It takes the execution token from `SAGA_EXECUTION_TOKEN` only, and with `--path` it calls the backend to find the project. See [`saga.md`](saga.md#worker-sessions).
 
 A `send` with Steer (`--steer`, or `HAGI_SEND_STEER` set in the calling shell) inserts its text into a running turn. The result says which happened: `steered` means a running task took it, and `queued` means no running task did, so it went out as the next message. `HAGI_SEND_STEER` belongs to the calling shell; the backend does not set it inside agent sessions.
 

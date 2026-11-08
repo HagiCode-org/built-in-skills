@@ -133,18 +133,32 @@ node ./dist/cli.js proposal --help
 
 If only a specific command changed, also verify that command's help directly.
 
-## Package publish-surface check
+## Saga Worker session command
 
-Run this when `package.json`, publish contents, or release metadata changed. Saga asset sync and package checks are
-offline and use the read-only canonical source checkout:
+Run this when `src/commands/saga/session.ts`, the Saga runtime helpers (`project.ts`, `safeWrite.ts`, `sessionRecord.ts`),
+the run prompt or these references changed:
 
 ```bash
 cd repos/cli
-pnpm run saga:assets:check
+pnpm exec vitest run tests/commands/saga-session-create.test.ts tests/runtime/saga/appendContained.test.ts tests/runtime/saga/project.test.ts tests/runtime/saga/sessionRecord.test.ts
+pnpm exec vitest run tests/runtime/saga/assets.test.ts tests/docs
+node ./dist/cli.js saga session create --help
+```
+
+The command test covers argument validation, token rejection, selector matching, the `saga.*` metadata, the `sessions.md`
+append and the failed-record report. The help check prints the parameters, the metadata keys and the metadata limits.
+
+## Package publish-surface check
+
+Run this when `package.json`, publish contents, or release metadata changed. The Saga asset check and the package check
+are offline:
+
+```bash
+cd repos/cli
+pnpm exec vitest run tests/runtime/saga/assets.test.ts
 pnpm run pack:check
 ```
 
-To intentionally refresh the Saga bundle first, run `pnpm run saga:assets:sync`; use `pnpm run saga:assets:check` to
-confirm byte and manifest consistency without writing. The npm tarball ships `dist`, `README.md`, `skills/**`, and only
-the allowlisted Saga resources, including the hidden `.gitignore` template. `pack:check` verifies the actual package
+The npm tarball ships `dist`, `README.md`, `skills/**`, and only
+the allowlisted Saga resources, including the `install/gitignore.template` file that becomes `.gitignore` in a project. `pack:check` verifies the actual package
 contents and rejects source maps or unexpected resource files.
