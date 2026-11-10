@@ -108,9 +108,19 @@ and `updatedAt`. `items <saga-id> --json` returns `{ "sagaId": "...", "items": [
 canonical `id`, `title`, `state`, `cmd`, and `note`.
 
 `status <saga-id> --json` returns the `saga-status/2` projection directly, with `schema`, `sagaId`, `revision`, `state`,
-`updatedAt`, `note`, `artifacts`, `nextArtifact`, `counts`, `openAmendments`, and `items`. It derives this view from the
-Saga files; `updatedAt` is the time of this observation, not the execution heartbeat in `runtime/status.json`. The query
-does not refresh or rewrite that stored status, and its default `note` is empty rather than a cached execution note.
+`updatedAt`, `note`, `artifacts`, `nextArtifact`, `counts`, `openAmendments`, and `items`. Counts, artifacts, `nextArtifact`,
+`openAmendments`, and `items` are derived from the Saga files at read time.
+
+`state` and `note` come from the stored snapshot in `runtime/status.json` when it is valid: a `state` of `draft`,
+`planned`, `running`, `paused`, or `done`. The reported `state` and `note` are the stored values as written, so a stored
+`paused` or `done` is reported even when the files derive another state. A stored `running` is the one exception: it is
+honored, with its note, only when the derived state (from the contract revision, artifacts, and item counts) is also
+`running`. Otherwise the derived state applies with an empty `note`, because `running` is the state that goes stale when
+an orchestrator exits. A missing file, unparsable JSON, a non-object document, or any other `state` value falls back to
+the derived state with an empty `note`.
+
+`updatedAt` is the time of this observation, not the execution heartbeat in `runtime/status.json`. The query
+does not refresh or rewrite that stored status, never repairs it, and creates no `runtime/` file or directory.
 
 All three queries are strictly read-only: they do not initialize or repair resources, create runtime files, run the Saga
 tool, or execute acceptance commands. Missing optional draft files use canonical empty-data behavior; malformed or
@@ -129,6 +139,13 @@ hagi saga release demo --path "./My Project" --token "$SAGA_EXECUTION_TOKEN" --w
 - `claim --session <id>` creates the lock exclusively and returns the token once, in the human output and as `token` in
   JSON. A second claim is refused with code `1` and names the owning session. A lock is never taken over because of its
   age, and a refused claim changes no file.
+- After the lock is taken, `claim` marks the owner session as the Saga's orchestrator: it adds `saga.id` (the Saga) and
+  `saga.role=master` to that session's `userMetadata` through the backend, so the session lists show the orchestrator
+  inside the Saga's group with its Workers. The mark is best effort and never fails the claim: an owner ID that is not a
+  HagiCode session, an unreachable backend, or a session that already carries another `saga.id` is reported as
+  `master: { "marked": false, "reason": "..." }` in JSON and as `master mark    not set: <reason>` in the human output. A
+  successful mark is `master: { "sessionId": "<id>", "marked": true }`. Stored entries are never changed. Pass
+  `--no-mark-session` to skip the mark.
 - While a lock exists, a mutating command needs the holder's token. A missing or different token is refused with exit
   code `1` and changes no file. Without a lock, mutating commands run under their own gates, so a Saga created before ownership stays runnable.
 - `assert-owner` exits `0` when no lock exists or the token matches, and `1` otherwise.
