@@ -20,7 +20,8 @@ Each command starts at most one stage. "Does not" lists what the command must no
 | `proposal status` | no stage; sets the status directly with a read-before-write merge | start any stage |
 | `proposal send` | no stage; sends a follow-up message on the active session | start a stage by itself, except as noted under "Who drives each step" |
 | `proposal get` | no stage; reads one session, and with `--wait` polls until its status settles | change the session |
-| `proposal messages` | no stage; reads the session's messages | change the session |
+| `proposal messages` | no stage; reads the session's messages, and with `--pending-question` the pending question | change the session |
+| `proposal answer` | no stage; answers the session's pending question, only on an explicit user request or Saga instruction | change the session |
 
 Explore mode is chosen with `--enable-explore-mode` or `--disable-explore-mode` on `proposal generate`.
 
@@ -118,7 +119,7 @@ hagi proposal get --session-id <id> --wait --json
 Read the `status` and the `wait` object in the output:
 
 - **Openspecing, Executing or Archiving**: the run is still going. The wait ends on its own at the timeout.
-- **WaitingForReply**: a person must answer. Tell the user; waiting longer does not help.
+- **WaitingForReply**: a person must answer. The output names the pending question. Tell the user what it asks (`proposal messages --session-id <id> --pending-question` shows the options). Answer it with `proposal answer` only when the user has asked you to, or an explicit Saga instruction says to; otherwise wait for the user. Once answered, wait again with `proposal get --wait`. Waiting longer alone does not help.
 - **Reviewing, ExecutionCompleted or Archived**: the stage has settled.
 - **Timeout (exit code `31`)**: report the last status to the user. Do not retry in a loop.
 

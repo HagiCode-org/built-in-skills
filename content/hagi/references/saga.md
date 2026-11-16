@@ -139,6 +139,8 @@ hagi saga release demo --path "./My Project" --token "$SAGA_EXECUTION_TOKEN" --w
 - `claim --session <id>` creates the lock exclusively and returns the token once, in the human output and as `token` in
   JSON. A second claim is refused with code `1` and names the owning session. A lock is never taken over because of its
   age, and a refused claim changes no file.
+- `--session` may be left out: `claim` then uses `HAGI_SESSION_ID`. An explicit `--session` always wins, and a blank value
+  counts as missing. With neither, `claim` exits `2` before it creates or reads any lock or runtime directory.
 - After the lock is taken, `claim` marks the owner session as the Saga's orchestrator: it adds `saga.id` (the Saga) and
   `saga.role=master` to that session's `userMetadata` through the backend, so the session lists show the orchestrator
   inside the Saga's group with its Workers. The mark is best effort and never fails the claim: an owner ID that is not a
@@ -146,6 +148,31 @@ hagi saga release demo --path "./My Project" --token "$SAGA_EXECUTION_TOKEN" --w
   `master: { "marked": false, "reason": "..." }` in JSON and as `master mark    not set: <reason>` in the human output. A
   successful mark is `master: { "sessionId": "<id>", "marked": true }`. Stored entries are never changed. Pass
   `--no-mark-session` to skip the mark.
+### Marking a planning session
+
+`mark` writes the same `saga.id` and `saga.role=master` pair that `claim` writes, to a session that does not take the Saga's
+execution lock. The Saga `new` prompt calls it right after `saga new`, so the planning session joins the Saga's group in the
+session lists.
+
+```bash
+hagi saga mark demo --path "./My Project" --session <your-session-id> --json
+```
+
+- `--session <id>`, else `HAGI_SESSION_ID`, names the session. With neither the command exits `2` before any backend or file
+  access. `mark` reads no execution token, takes no lock, and changes no Saga file, so it runs whether or not another session
+  holds `runtime/execute.lock`. It takes no ownership and has no `--no-mark-session` option (that option belongs to `claim`).
+- A repeat mark of the same session for the same Saga succeeds unchanged. The backend is add-only: a session that already
+  carries a different `saga.id` is not overwritten, and that refusal is a failed mark.
+- The backend call gives up after 10 seconds. A rejected call, an unreachable backend, a timeout or a conflict exits `1` with
+  one reason line, so the caller can retry once and report the result. A retry after a timeout is safe because the add is
+  idempotent.
+- JSON success is `{ "sagaId", "sessionId", "marked": true }`; JSON failure is `{ "sagaId", "sessionId", "marked": false,
+  "reason" }`. Unlike the other write commands, the object has no `command` or `ok` field. The human output is one line:
+  `marked: <saga> (session <id>)` or `mark failed: <saga> (session <id>): <reason>`.
+- Exit codes: `0` marked; `1` mark failed; `2` usage error (no session ID, or no selector); `24` Saga not found.
+- Use `claim` when the session should own execution. `claim` also writes this pair, but it takes the lock, and a failed mark
+  never fails a claim. `mark` has one job, so a failed mark exits `1` for the caller to see.
+
 - While a lock exists, a mutating command needs the holder's token. A missing or different token is refused with exit
   code `1` and changes no file. Without a lock, mutating commands run under their own gates, so a Saga created before ownership stays runnable.
 - `assert-owner` exits `0` when no lock exists or the token matches, and `1` otherwise.
@@ -184,10 +211,17 @@ Set `SAGA_EXECUTION_TOKEN` to the token that `claim` printed, then create a Work
 hagi saga session create --saga demo --path "./My Project" --title "T1 implementation" --role implementation --master orchestrator-1 --item T1 --json
 ```
 
+To bind the Worker to a Hero, add `--hero <name-or-id>`, for example `--hero Nova` or a Hero ID:
+
+```bash
+hagi saga session create --saga demo --path "./My Project" --title "T1 implementation" --role implementation --master orchestrator-1 --item T1 --hero Nova --json
+```
+
 - The command creates one ordinary chat session in the project and appends one line to `runtime/sessions.md`. It sends
   no message and does not archive the session; `hagi chat archive --session-id <id>` stays a separate step.
-- Required and nonblank: `--saga <id>`, `--title <title>`, `--role implementation|verification`, and `--master <session-id>`
-  (the orchestrator's own session ID). `--item <id>` is optional. `--saga` and `--item` are identifiers: a path separator
+- Required and nonblank: `--saga <id>`, `--title <title>`, and `--role implementation|verification`. `--master <session-id>`
+  (the orchestrator's own session ID) may be left out: the command then uses `HAGI_SESSION_ID`. An explicit `--master`
+  always wins, and with neither the command exits `2` before any request. `--item <id>` is optional. `--saga` and `--item` are identifiers: a path separator
   or a traversal segment is a usage error (code `2`). Exactly one of `--path <directory>` or `--project-id <id>` is
   required.
 - The execution token comes only from `SAGA_EXECUTION_TOKEN`, which must be set and nonempty. `--token` is refused with
@@ -198,6 +232,12 @@ hagi saga session create --saga demo --path "./My Project" --title "T1 implement
   names the path or the matching IDs, and creates nothing. `--project-id` looks the project up directly.
 - After the project and the Saga are resolved, the owner check of `assert-owner` runs with the token. A Saga without a lock
   still passes once a token is set. A wrong token is a refusal (code `1`), and an unknown Saga is code `24`.
+- `--hero <name-or-id>` is optional. A GUID is sent as `heroId`; any other nonblank value is sent as `heroName`, matched
+  like Hero names (trimmed, case-insensitive). A blank value is a usage error (code `2`), and no file is touched. Without
+  `--hero` the request is the same as before. The Hero is never written to `userMetadata` or `sessions.md`. A Hero the
+  backend rejects (an unknown name, a name and an ID together, or a disabled Hero) fails with the backend's message, the
+  record line is not written, and no Worker is recorded. With `--json` the `session.chatHero` object names the Hero the
+  backend bound, and the human result shows it on a `hero` line. An older backend ignores the name and runs its default Hero.
 - The new session's `userMetadata` holds `saga.id` (the Saga), `saga.role` (always `worker`), `saga.worker` (the `--role`
   value), `saga.master` (the `--master` value), and `saga.item` only when `--item` is given. The backend checks the key
   format (`^[a-z][a-z0-9._-]{0,63}$`), at most 16 entries, and value length (1 to 512 characters). The metadata is
@@ -210,7 +250,14 @@ hagi saga session create --saga demo --path "./My Project" --title "T1 implement
 - If the append fails after the session was created, the command exits `1` and names the created session ID, in the
   human output and as `session.sessionId` in `--json` with `ok` false.
 - `--json` success is one object: `{ "sagaId": "demo", "command": "session create", "ok": true, "session": { "sessionId": "...", "userMetadata": { ... } }, "record": "<path to sessions.md>" }`.
-- Exit codes: `0` created and recorded; `1` refused, or the record failed after creation; `2` usage error; `24` Saga not found.
+- Exit codes: `0` created and recorded; `1` refused, or the record failed after creation; `2` usage error; `20` the backend rejected the request, as with a Hero it cannot bind; `24` Saga not found.
+
+### Run records
+
+Two commands replace the hand-written steps of the run prompt. Both take the Saga's path, as the other local Saga commands do.
+
+- `hagi saga session list <saga-id> --path <root> [--json]` lists the Worker records in `runtime/sessions.md`: session ID, UTC creation time, role, item (`null` for `-`) and title, in file order. It is read-only and needs no token. A Saga with no `sessions.md` lists nothing and exits `0`. An unknown Saga exits `24`. `--json` returns `{ "sagaId", "command": "session list", "ok": true, "sessions": [...] }`.
+- `hagi saga log append <saga-id> --message <text> --path <root>` appends one line, `- <UTC time> | <message>`, to `runtime/orchestrator-log.md`. It needs the execution token of the Saga owner, from `SAGA_EXECUTION_TOKEN` or `--token`, and refuses a token that does not match the lock with exit `1`. Whitespace and line breaks in the message collapse to one line. A blank message is a usage error (exit `2`) before any file or token check. The runtime directory is created when missing, and a redirected log file is refused before any byte is written.
 
 ## Items, amendments, and archive
 

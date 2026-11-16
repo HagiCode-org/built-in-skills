@@ -68,6 +68,8 @@ Explicit flags always override environment variables.
 | `HAGI_API_BASE_URL` | Backend base URL, used when `--base-url` is not given. Overrides the config file. |
 | `HAGI_API_TOKEN` | Bearer token attached as `Authorization: Bearer <token>`. |
 | `HAGI_API_LANG` | Shared `Accept-Language` header value. |
+| `HAGI_SESSION_ID` | Your own HagiCode session ID. Fallback for `--session` (`saga claim`, `saga mark`, the lock commands) and for `--master` (`saga session create`) when the flag is absent or blank. An explicit flag wins. |
+| `HAGI_PROJECT_ID`, `HAGI_PROJECT_NAME`, `HAGI_PROJECT_PATH`, `HAGI_WORKING_DIRECTORY` | Set by HagiCode for an agent run, not read by the CLI. `HAGI_PROJECT_PATH` and `HAGI_WORKING_DIRECTORY` are file system paths. See [Session data](session-data.md#runtime-variables). |
 | `HAGI_SEND_STEER` | Turns Steer on (`1`, `true`, `yes`, `on`) or off (`0`, `false`, `no`, `off`) for `chat`, `proposal` and `hagitask send`. Any other value exits with code `2`. See [Steer for send commands](#steer-for-send-commands). |
 
 ## Config file
@@ -91,16 +93,15 @@ settings do not affect that local operation. The one exception is `saga session 
 hagi
 |-- project   list | repositories | create | update | delete
 |   `-- monospecs show | init | set | validate | reload | clone | remove-checkout
-|-- proposal  list | create | optimize-description | generate | annotate | execute | archive | status | complete | send | get | messages
-|-- saga      init | new | list | status | items | claim | assert-owner | release | freeze | check | tick | block | set-status | amend | archive | session create
+|-- proposal  list | create | optimize-description | generate | annotate | execute | archive | status | complete | send | get | messages | answer
+|-- saga      init | new | list | status | items | mark | claim | assert-owner | release | freeze | check | tick | block | set-status | amend | archive | session create | session list | log append
 |-- vault     list | create | update | delete
 |   `-- files list | preview
-|-- chat      list | create | archive | delete | send
-|-- hagitask  list | schema | create | send | get | messages
+|-- chat      list | get | messages | create | archive | delete | send
+|-- hagitask  list | schema | create | send | get | messages | answer
 |-- plan      list | get | create | update | enable | disable | delete | run
-|-- skills    local list | enable | disable | uninstall
-|             gallery search | detail | install
-|             trusted list | upsert | delete | reset
+|-- skills    local list | enable | disable
+|-- hero      list [--json]
 |-- usage     limits [--provider] [--wait-until-above <percent> --max-wait <seconds> --jitter-seconds <seconds>]
 `-- agent     lock acquire | status | renew | heartbeat | release | requisition | list
 ```
@@ -126,6 +127,7 @@ hagi saga list --path "./My Project"
 hagi saga status demo --project-id <project-id> --json
 hagi saga items demo --path "./My Project" --json
 hagi saga claim demo --path "./My Project" --session orchestrator-1 --json
+hagi saga mark demo --path "./My Project" --session orchestrator-1 --json
 hagi saga check demo --path "./My Project" --phase run --json
 hagi saga tick demo T1 --path "./My Project" --token "$SAGA_EXECUTION_TOKEN" --json
 hagi saga session create --saga demo --path "./My Project" --title "T1 implementation" --role implementation --master orchestrator-1 --item T1 --json
@@ -179,7 +181,27 @@ hagi proposal messages --session-id <session-id> --last 1 --json
 
 - `--wait` settles on any status other than Optimizing, Openspecing, Executing or Archiving. WaitingForReply counts as settled, because a person must answer.
 - `--timeout`, `--interval` and `--grace` are seconds and need `--wait`. `--interval` must be less than `--timeout`. A timeout exits `31`.
+- `proposal messages --pending-question` prints only the pending question of the session, from the same read; it exits `24` when none is pending. `proposal answer` answers that question. See [Answering a pending question](#answering-a-pending-question).
 - Which stage each command starts, and how to follow a run, is in [openspec-workflow.md](openspec-workflow.md).
+
+## Chat reads and message paging
+
+`chat get` is a plain read using the shared session summary: JSON is `{ session }`. It does not start or wait for work. There is no chat `--wait` or `chat answer` command; proposal/HagiTask wait and answer behavior is unchanged.
+
+```bash
+hagi chat get --session-id <session-id> --json
+hagi chat messages --session-id <session-id> --json
+hagi chat messages --session-id <session-id> --page 2 --page-size 50 --order desc --json
+hagi proposal get --session-id <session-id> --json
+hagi proposal messages --session-id <session-id> --page 2 --page-size 50 --order desc --json
+```
+
+- `chat messages`, `proposal messages`, and `hagitask messages` share paging. Without flags: page 1, descending, page size omitted (backend default **50**, maximum **200**).
+- `--page` and `--page-size` accept positive safe integers. `--order` accepts only `asc` or `desc`; ascending pages are not locally reversed. Partial paging options keep the other defaults.
+- `--last <n>` requests one descending page of n newest messages, subject to the backend's 200-message cap. It cannot mix with any explicit `--page`, `--page-size`, or `--order`, even their default values. Invalid/conflicting options fail before a backend call.
+- JSON retains every returned message and actual `page`, `pageSize`, `totalCount`, and `totalPages`, including clamping. No automatic page merging or complete-history guarantee. `--pending-question` still searches only the requested page with the same read.
+
+For fresh-thread recovery, pass the explicit existing HagiCode session ID, not a provider thread ID or an assumed `HAGI_SESSION_ID`. Use the session's `chat` or `proposal` get/messages commands and older pages to recover the task, decisions, latest instructions, and remaining authorized work. Reuse the existing connection; use `hagi` on PATH or `npx @hagicode/cli` only with Node.js 24+. Report exact retrieval blockers without guessing context, credentials, or a backend address. Do not create another session, self-send, answer, or trigger a lifecycle action just to continue. Stay within the current stage and repository authorization; report readiness when no authorized work remains. See [session-data.md](session-data.md#recovering-context-in-a-fresh-provider-thread).
 
 ## Session metadata
 
@@ -213,7 +235,24 @@ hagi hagitask messages --session-id <session-id> --last 1 --json
 hagi hagitask send --session-id <session-id> --content "Retry with a smaller diff"
 ```
 
-`hagi hagitask get` and `hagi hagitask messages` take the same options as the proposal commands above.
+`hagi hagitask get` and `hagi hagitask messages` take the same options as the proposal commands above. `hagi hagitask answer` answers the pending question of a HagiTask session, as described in [Answering a pending question](#answering-a-pending-question).
+
+## Answering a pending question
+
+When an agent asks the user a question, the session stops at `WaitingForReply`. Four steps follow, for `proposal` and `hagitask` alike:
+
+```bash
+hagi proposal get --session-id <session-id> --wait --json                 # 1. wait: settles at WaitingForReply; the output names the pending question
+hagi proposal messages --session-id <session-id> --pending-question       # 2. read the question: header, numbered options, single or multi-select, custom answer, state
+hagi proposal answer --session-id <session-id> --option staging           # 3. answer: --option (label or 1-based number), --text, --input <file|->, or --reject
+hagi proposal get --session-id <session-id> --wait --json                 # 4. wait again for the run to continue
+```
+
+- `answer` reads the newest messages once, finds the pending question, checks the answer against it, and sends one request. It never retries. `--option` repeats for a multi-select question; a label that is a number goes through `--input`. `--question <n>` addresses one question (default 1). A prompt with several questions is answered with `--input`, a JSON document such as `{"answers":[{"question":1,"options":["staging"]},{"question":2,"text":["a note"]}]}`; `--input` cannot be combined with `--option`, `--text`, `--question` or `--reject`.
+- Exit codes: `0` accepted (`delivered` or `resumed`); `35` the answer was refused, by the CLI before sending or by the backend, with the reason printed; `36` the question was already answered or is no longer open; `24` no pending question, or the message or question was not found. A usage error exits `2` before any request.
+- A secret question's answer never appears in the output, the `--json` result or an error message.
+- `messages --pending-question --json` prints `{ sessionId, messageId, userQuestion }`. `wait.pendingQuestion` in the `--wait --json` output names the question at `WaitingForReply`; the five existing `wait` fields do not change.
+- **`answer` changes session state.** Run it only on an explicit user request or an explicit Saga instruction. Never answer on your own judgment: when a question is pending and nobody has asked you to answer it, tell the user and wait.
 
 Super Commit is a prompt, not a preset task, so it has no schema and takes no `--input`. Start it with a prompt id:
 
@@ -225,7 +264,8 @@ Start one only when the user asked for it. See [super-commit.md](super-commit.md
 
 - `schema` (human view) lists the target scope, commands and parameters, with each required parameter marked `yes`, then the requirements, scenes, endpoint and an example command. `--json` adds the input JSON Schema and the example request body.
 - `create` needs `--title`, `--project-id`, and either `--task-id` or `--prompt-id`. `--input <file|->` needs `--task-id`. The input must be a JSON object. The CLI does not check its keys; the backend does, and it rejects a key that the schema does not list and a missing required value. A rejection is printed unchanged and no session is reported.
-- `create --json` prints `{ session, presetTaskId, promptId, requested }`. Read the session id from `session.sessionId`.
+- `create --json` prints `{ session, presetTaskId, promptId, requested }`. Read the session id from `session.sessionId`. `requested` carries `heroId` or `heroName` when a Hero was given, and `session.chatHero` names the Hero the backend bound when it returns one.
+- `create --hero <name-or-id>` picks the Hero. A GUID is sent as `heroId`; any other value is sent as `heroName` (trimmed, matched without regard to case). Give `--hero` or `--hero-id`, not both: that is a usage error (exit `2`) and sends nothing. A blank value is also exit `2`. An unknown name, or both fields in one request, fails with the backend's message and creates no session. Needs a backend that includes the `hero_name` field; an older backend ignores the name and runs its default Hero.
 
 Example `input.json` for a task with one required input:
 
@@ -274,8 +314,8 @@ Scheduled plans save a proposal or HagiTask input with a schedule and, for HagiT
 hagi plan
 |-- list
 |-- get      --id <id>
-|-- create   --input <file|-> [--name <name>] [--hero-id <id>] [--disabled]
-|-- update   --id <id> [--input <file|->] [--name <name>] [--hero-id <id>] [--enabled | --disabled]
+|-- create   --input <file|-> [--name <name>] [--hero-id <id>] [--disabled] [--window-start <instant>] [--window-end <instant>] [--first-at <instant>] [--every <duration>] [--time-zone <iana>]
+|-- update   --id <id> [--input <file|->] [--name <name>] [--hero-id <id>] [--enabled | --disabled] [--window-start <instant>] [--window-end <instant>] [--first-at <instant>] [--every <duration>] [--time-zone <iana>]
 |-- enable   --id <id>
 |-- disable  --id <id>
 |-- delete   --id <id>
@@ -284,6 +324,7 @@ hagi plan
 
 - `create` enables the plan unless the document sets `enabled` or `--disabled` is passed.
 - `update`, `enable` and `disable` read the current plan and send it back whole, so unchanged fields are kept. `update --input` replaces each top-level key it contains as a whole value.
+- Interval schedule flags (`--window-start`, `--window-end`, `--first-at`, `--every`, `--time-zone`) build an `interval` schedule on `create` and `update`. Instants need a UTC offset (`Z` or `+hh:mm`), `--every` takes `<n>m`, `<n>h` or `<n>d` and the minimum is 5 minutes. A bad value, or a missing flag, exits `2` with no backend call. On `update` of an interval plan, each flag replaces only its field; on any other plan all four are required. The backend checks order rules and prints each problem by field.
 - `run` creates a session now and waits for it. `run --background` returns `{ planId, accepted: true }` once the backend accepts the run, before the session exists.
 - A manual run does not change the plan's state or next run time, and works for disabled and completed plans.
 
@@ -303,7 +344,16 @@ A one-time proposal plan document for `plan create --input`:
 }
 ```
 
-The README's `## Plan Commands` section has a recurring HagiTask example and the full `update`, `enable`, `disable` and `delete` workflow.
+An interval plan that fires every 3 hours on 14 November, Los Angeles time (eight runs, from 00:00 to 21:00):
+
+```bash
+hagi plan create --input release-watch.json \
+  --window-start 2026-11-14T00:00-08:00 --window-end 2026-11-14T23:59-08:00 \
+  --first-at 2026-11-14T00:00-08:00 --every 3h --time-zone America/Los_Angeles
+hagi plan update --id "$PLAN_ID" --every 2h --json
+```
+
+The README's `## Plan Commands` section has a recurring HagiTask example and the full `update`, `enable`, `disable` and `delete` workflow, and its "Interval plans" subsection lists the flags.
 
 ## Skills commands
 
@@ -317,9 +367,6 @@ hagi skills local disable --skill-name hagi --json
 ```
 
 - `enable` and `disable` take `--skill-name` and change one built-in skill. They apply to agent runs that start afterwards.
-- `uninstall` removes a user skill. Built-in skills cannot be uninstalled; use `disable` to stop one from loading.
-- Skill recommendation and install progress streaming are not part of the CLI. `skills gallery search`, `detail` and `install` are the discovery and install path.
-- `skills gallery detail` adds skills.sh audit ratings. `--json` keeps the detail fields and adds `audit: { providers: [...] }`, one entry per provider with `provider` and, when supplied, `risk`, `alerts`, `score` and `analyzedAt`. Human output appends one `skills.sh audit (<provider>)` line per provider, with `--` for missing values. If the audit fails or has no data, the command still exits `0` and `audit.providers` is `[]`. A detail failure fails the command as before. The audit never changes the install command preview or installability.
 
 ## Agent lock commands
 
@@ -342,6 +389,17 @@ hagi agent lock list --prefix eu-1/
 - `heartbeat` is long-running and quiet on success. Run it under a watcher; it exits `32` when the lock is lost and `0` when stopped, without releasing.
 - Timing: 10-minute feedback timeout, 24-hour maximum hold, 2-minute heartbeat interval, 30-second claim window, 60-second waiter TTL.
 - Never run `requisition` unless the user explicitly ordered a forced take.
+
+## Hero commands
+
+`hagi hero list` reads the Heroes the backend supports now and prints the ones a chat can run with: enabled, and neither built in nor read only. These are the Heroes `--hero <name-or-id>` accepts. It is read-only.
+
+```bash
+hagi hero list --json
+```
+
+- `--json` prints `{ heroes: [{ heroId, name, executorType }] }`. The human view prints one line per Hero: name, `heroId`, executor type.
+- An empty list means no Hero can run a chat right now. Do not pick a Hero for the user in that case.
 
 ## Usage commands
 
@@ -379,6 +437,8 @@ Stable non-zero exits used by the CLI. The HTTP numbers are the equivalents of t
 | `31` | Wait timed out: `--wait` on `proposal get`, `hagitask get` or `agent lock acquire` reached `--timeout` before the session settled. The last status is printed. Not a success, and not a backend error |
 | `32` | Lock lost: a `hagi agent lock` command learned that the owner no longer holds the lock (expired, taken back at the 24-hour cap, stale epoch, requisitioned). Stop using the resource. Distinct from `31` |
 | `34` | Quota unavailable: `hagi usage limits` could not read a usable figure, either on a plain read or after a wait's retries. Nothing is known about the quota, so none is claimed. Low quota is not this code: it exits `0` |
+| `35` | Answer refused: `proposal answer` or `hagitask answer` found the answer invalid, by its own checks or by the backend (`invalid`, with its reason). Nothing was changed |
+| `36` | Question already answered or no longer open: `proposal answer` or `hagitask answer` found it answered or cancelled. Nothing was changed by this call |
 | `40` | Other HTTP 4xx |
 | `50` | HTTP 5xx |
 | `60` | Transport or connection failure |
