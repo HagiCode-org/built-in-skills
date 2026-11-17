@@ -44,6 +44,14 @@ The Git identity, the co-author trailer and the sign-off setting come from the u
 
 Do not invent a flag for them, and do not put them in `--message`. If the user wants a different co-author for a run, tell them that the CLI has no option for it and ask them to change the saved setting.
 
+### Default Git profile
+
+A Super Commit started from the CLI uses the user's default Git profile automatically. The default is the profile last selected in the Git settings. If none is selected, or the selected one no longer exists, the default is the first saved profile.
+
+The CLI has no option to pick another profile for one run. If the user wants a different identity, tell them to select that profile in the Git settings, and ask them to change the saved profile selection. Do not put a profile in `--message`.
+
+If `hagi hagitask create` for a Super Commit prints an error with the code `no-default-git-profile`, no session was created. Report that no Git profile is saved, and ask the user to create one in the Git settings. Do not retry in a loop, and do not invent a profile through `--message`.
+
 ## Read the result
 
 After the session settles (see "Who drives each step"), read the final message:

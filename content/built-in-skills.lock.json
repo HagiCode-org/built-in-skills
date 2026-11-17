@@ -7,10 +7,10 @@
       "source": {
         "type": "github",
         "repository": "HagiCode-org/cli",
-        "ref": "1639addfee23ba6559ccdd35803fc5c2af2b55d1",
+        "ref": "c3b0e1095cb92059e08696df54b5602cbbee1fc5",
         "path": "skills/hagi"
       },
-      "contentHash": "sha256:296ec139e1952d8a83343559ae675a388c89c4861a6538ecaf3545259e68445c"
+      "contentHash": "sha256:0e7bdbd5c06ce27f0b9949135b0a861b93142ccde37349bc1dc57dc0d5607874"
     },
     {
       "slug": "impeccable",
