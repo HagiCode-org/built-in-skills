@@ -7,10 +7,10 @@
       "source": {
         "type": "github",
         "repository": "HagiCode-org/cli",
-        "ref": "c3b0e1095cb92059e08696df54b5602cbbee1fc5",
+        "ref": "5f4d8c07d2059165a49e5e182df0c952d418d3fa",
         "path": "skills/hagi"
       },
-      "contentHash": "sha256:0e7bdbd5c06ce27f0b9949135b0a861b93142ccde37349bc1dc57dc0d5607874"
+      "contentHash": "sha256:14d3aec27214c19e19f44100c88bce65d2d261814afb90689018eda27bf90d95"
     },
     {
       "slug": "impeccable",
@@ -22,6 +22,15 @@
         "path": ".agents/skills/impeccable"
       },
       "contentHash": "sha256:d883fb0b223c1c240fc877e2b71f480a5efea6aaf530d80f045e1bc0881f0582"
+    },
+    {
+      "slug": "monospecs",
+      "version": "0.1.0",
+      "source": {
+        "type": "local",
+        "path": "content/monospecs"
+      },
+      "contentHash": "sha256:45e36e443eb50a7f4d95a3cfe0d522193b094203a49966ddec66207c08ccec10"
     },
     {
       "slug": "ponytail",
