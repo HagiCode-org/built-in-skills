@@ -43,6 +43,7 @@ Use this skill when the user asks to:
 7. The user's own data, inside a HagiCode session -> read [`references/session-data.md`](references/session-data.md)
 8. Local Saga initialization, creation, list, status, item queries, marking a planning session (`mark`), ownership, checks, freeze, ticks, status writes, amendments, archive, or creating and recording Saga Worker sessions (`session create`) -> read [`references/saga.md`](references/saga.md)
 9. A shared resource that other agents also use, or any `hagi agent lock` command -> read [`references/resource-lock.md`](references/resource-lock.md)
+10. Editing a project's `.hagicode/monospecs.yaml` directly (initialize it, add repositories from URLs, reorder them with `ui.collapseToMore`) -> use the built-in `monospecs` skill. Use `hagi project monospecs ...` instead when the backend should read, write or clone for the project (see [`references/cli-usage.md`](references/cli-usage.md#monospecs-commands))
 
 When `hagi` is loaded as a built-in skill inside a HagiCode session, read item 7 first for any question about the user's own data or skills, before the other references.
 

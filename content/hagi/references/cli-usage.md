@@ -152,7 +152,7 @@ An unknown project id exits with code `24` and prints no list.
 
 ## MonoSpecs commands
 
-`project monospecs` manages a project's MonoSpecs configuration (`monospecs.yaml`) and the local checkouts of its repositories. The CLI only sends requests; the backend reads and writes files and runs Git on its own host.
+`project monospecs` manages a project's MonoSpecs configuration (`monospecs.yaml`) and the local checkouts of its repositories. The CLI only sends requests; the backend reads and writes files and runs Git on its own host. To edit `.hagicode/monospecs.yaml` directly in a project root instead (initialize it, add repositories from URLs, reorder them by activity), use the built-in `monospecs` skill; no CLI call is needed for that.
 
 - `show --id <id>` prints the document: version, repo directory, config path, commit-when-archive, and one row per repository with its local Git state. A repository that is not a valid Git checkout is marked `missing or not a Git repository`. `--yaml` adds the YAML preview; `--json` emits the same fields plus `code` and `metadata`.
 - `init --id <id>` initializes the configuration; an already initialized project returns its document.

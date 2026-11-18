@@ -21,7 +21,7 @@ tests/test_built_in_skills.py     tests for the tool
 
 Everything outside `content/` stays out of release packages. Only `content/` is the publishable unit.
 
-Current skills: `hagi`, `impeccable`, `ponytail`, `ponytail-audit`, `ponytail-debt`, `ponytail-gain`, `ponytail-help`, `ponytail-review`, `systematic-debugging`, `vercel-react-best-practices`, `verification-before-completion`, `visualise`.
+Current skills: `hagi`, `impeccable`, `monospecs`, `ponytail`, `ponytail-audit`, `ponytail-debt`, `ponytail-gain`, `ponytail-help`, `ponytail-review`, `systematic-debugging`, `vercel-react-best-practices`, `verification-before-completion`, `visualise`.
 
 ## Trimmed upstream copies
 
@@ -34,7 +34,7 @@ Two skills are copies of an upstream folder with the upstream authoring files le
 
 `hagi` is the agent skill for the `hagi` CLI. It is copied from the `HagiCode-org/cli` repository, path `skills/hagi/`, which is the only place it is edited. `content/hagi/` is a byte-for-byte copy of that folder at the commit named in its lock entry. Claude Code lists it as `hagi:hagi`.
 
-Do not edit `content/hagi/` here. To change it: edit `repos/cli/skills/hagi/`, commit in the CLI repository, recopy the folder, and set the lock entry's `ref` to that commit and `contentHash` to the output of `hash hagi`.
+Do not edit `content/hagi/` here. To change it: edit `repos/cli/skills/hagi/` and commit in the CLI repository. The CLI repository's git hooks (`.githooks/`: `post-commit`, `post-merge`, `post-rewrite`; enabled with `pnpm run hooks:install`) then runs `python3 scripts/built_in_skills.py sync-hagi --cli ../cli`, which recopies the folder from the committed tree, sets the lock entry's `ref` to that commit and `contentHash` to the hash of the copy, and runs `verify`. The result stays uncommitted in this repository for you to review and commit. Run the same command by hand when the hooks are not installed; `--ref <commit>` picks another CLI commit. The `ref` must be pushed to `HagiCode-org/cli` before a release is built from this lock.
 
 ## Lock file
 
