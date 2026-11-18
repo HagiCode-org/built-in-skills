@@ -6,6 +6,7 @@ import contextlib
 import importlib.util
 import io
 import json
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -240,6 +241,70 @@ class CommandTests(unittest.TestCase):
             self.assertEqual(bis.main(["verify", "--content", str(Path(tmp) / "absent")]), 2)
 
 
+class SyncHagiTests(unittest.TestCase):
+    """``sync-hagi`` copies skills/hagi from a committed CLI ref and refreshes only the hagi lock entry."""
+
+    HAGI_MD = b"---\nname: hagi\ndescription: Hagi CLI skill.\n---\nbody\n"
+
+    def git(self, repo: Path, *args: str) -> str:
+        return subprocess.run(
+            ["git", "-C", str(repo), "-c", "user.name=t", "-c", "user.email=t@example.com", *args],
+            check=True, capture_output=True, text=True,
+        ).stdout.strip()
+
+    def make_cli(self, tmp: Path) -> Path:
+        cli = tmp / "cli"
+        (cli / "skills" / "hagi" / "references").mkdir(parents=True)
+        (cli / "skills" / "hagi" / "SKILL.md").write_bytes(self.HAGI_MD)
+        (cli / "skills" / "hagi" / "references" / "a.md").write_bytes(b"a\r\n")
+        self.git(cli, "init", "-q")
+        self.git(cli, "add", ".")
+        self.git(cli, "commit", "-q", "-m", "init")
+        return cli
+
+    def make_content(self, tmp: Path) -> Path:
+        root = write_bundle(tmp / "content", "hagi")
+        lock = read_lock(root)
+        lock["skills"].append({"slug": "other", "version": "1", "source": {"type": "local", "path": "x"}, "contentHash": "sha256:" + "0" * 64})
+        write_lock(root, lock)
+        return root
+
+    def test_copies_committed_bytes_and_refreshes_lock_entry(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_name:
+            tmp = Path(tmp_name)
+            cli, root = self.make_cli(tmp), self.make_content(tmp)
+            # An uncommitted edit must not reach the copy.
+            (cli / "skills" / "hagi" / "SKILL.md").write_bytes(b"uncommitted\n")
+            head = self.git(cli, "rev-parse", "HEAD")
+            self.assertEqual(bis.sync_hagi(cli, "HEAD", root), head)
+            self.assertEqual((root / "hagi" / "SKILL.md").read_bytes(), self.HAGI_MD)
+            self.assertEqual((root / "hagi" / "references" / "a.md").read_bytes(), b"a\r\n")
+            entries = {entry["slug"]: entry for entry in read_lock(root)["skills"]}
+            self.assertEqual(entries["hagi"]["source"], {"type": "github", "repository": "HagiCode-org/cli", "ref": head, "path": "skills/hagi"})
+            self.assertEqual(entries["hagi"]["contentHash"], bis.content_hash(root / "hagi"))
+            self.assertEqual(entries["other"]["contentHash"], "sha256:" + "0" * 64)
+
+    def test_removes_files_deleted_upstream_and_is_idempotent(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_name:
+            tmp = Path(tmp_name)
+            cli, root = self.make_cli(tmp), self.make_content(tmp)
+            (root / "hagi" / "stale.md").write_bytes(b"stale\n")
+            bis.sync_hagi(cli, "HEAD", root)
+            self.assertFalse((root / "hagi" / "stale.md").exists())
+            before = snapshot(root)
+            bis.sync_hagi(cli, "HEAD", root)
+            self.assertEqual(snapshot(root).keys(), before.keys())
+            self.assertEqual({k: v[0] for k, v in snapshot(root).items()}, {k: v[0] for k, v in before.items()})
+
+    def test_command_reports_unknown_ref_and_leaves_folder_alone(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp_name, contextlib.redirect_stderr(io.StringIO()):
+            tmp = Path(tmp_name)
+            cli, root = self.make_cli(tmp), self.make_content(tmp)
+            before = snapshot(root)
+            self.assertEqual(bis.main(["sync-hagi", "--cli", str(cli), "--ref", "nope", "--content", str(root)]), 2)
+            self.assertEqual(snapshot(root), before)
+
+
 class FrontMatterTests(unittest.TestCase):
     def test_shared_fixture_verdicts(self) -> None:
         for label, text, expected in FRONT_MATTER_FIXTURES:
@@ -337,7 +402,8 @@ class RealContentTests(unittest.TestCase):
 
     def test_copied_skills_carry_a_license_file(self) -> None:
         # hagi and visualise are not edited here, so their license statement lives in THIRD-PARTY-NOTICES.md only.
-        without_file = {"hagi", "visualise"}
+        # monospecs is written for HagiCode and has no upstream, so it needs no third-party license file.
+        without_file = {"hagi", "visualise", "monospecs"}
         lock = json.loads((REPO / "content" / "built-in-skills.lock.json").read_text(encoding="utf-8"))
         for entry in lock["skills"]:
             if entry["slug"] in without_file:

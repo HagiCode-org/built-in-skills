@@ -4,6 +4,7 @@ Standard library only, so it runs with any Python 3 interpreter and without the 
 
     python scripts/built_in_skills.py verify
     python scripts/built_in_skills.py hash <slug>
+    python scripts/built_in_skills.py sync-hagi --cli <path to repos/cli> [--ref <commit>]
 
 Layout: ``content/<slug>/SKILL.md`` (plus supporting files), ``content/built-in-skills.lock.json`` and the
 bundle-level entries in ``BUNDLE_LEVEL_ENTRIES``. Each lock entry records the slug, the version, the source
@@ -29,9 +30,14 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import io
 import json
 import re
+import shutil
+import subprocess
 import sys
+import tarfile
+import tempfile
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -246,6 +252,59 @@ def verify(root: Path = CONTENT_DIR) -> list[Finding]:
     return findings
 
 
+HAGI_SLUG = "hagi"
+HAGI_CLI_PATH = "skills/hagi"
+HAGI_CLI_REPOSITORY = "HagiCode-org/cli"
+
+
+def sync_hagi(cli_repo: Path, ref: str = "HEAD", root: Path = CONTENT_DIR) -> str:
+    """Copy ``skills/hagi`` of ``cli_repo`` at ``ref`` into ``root/hagi`` and refresh its lock entry.
+
+    The folder is read from the committed tree (``git archive``), never from the working tree, so uncommitted
+    edits cannot reach the copy and the lock ``ref`` always names a commit that holds the copied bytes. Only
+    ``root/hagi`` and the ``hagi`` lock entry change; every other entry and the lock file layout stay as they
+    are. Returns the full commit the copy was taken from.
+    """
+    commit = subprocess.run(
+        ["git", "-C", str(cli_repo), "rev-parse", "--verify", f"{ref}^{{commit}}"],
+        check=True, capture_output=True, text=True,
+    ).stdout.strip()
+    archive = subprocess.run(
+        ["git", "-C", str(cli_repo), "archive", "--format=tar", commit, HAGI_CLI_PATH],
+        check=True, capture_output=True,
+    ).stdout
+
+    lock_path = root / LOCK_FILE_NAME
+    lock = json.loads(lock_path.read_text(encoding="utf-8"))
+    entry = next((item for item in lock["skills"] if item.get("slug") == HAGI_SLUG), None)
+    if entry is None:
+        raise ValueError(f"{lock_path} has no {HAGI_SLUG!r} entry to refresh")
+
+    with tempfile.TemporaryDirectory() as tmp:
+        staging = Path(tmp)
+        with tarfile.open(fileobj=io.BytesIO(archive)) as tar:
+            tar.extractall(staging, filter="data")
+        fresh = staging / HAGI_CLI_PATH
+        if not (fresh / SKILL_FILE_NAME).is_file():
+            raise ValueError(f"{HAGI_CLI_PATH}/{SKILL_FILE_NAME} is missing at {commit}")
+        target = root / HAGI_SLUG
+        if target.exists():
+            shutil.rmtree(target)
+        shutil.copytree(fresh, target)
+
+    entry["source"] = {
+        "type": "github",
+        "repository": HAGI_CLI_REPOSITORY,
+        "ref": commit,
+        "path": HAGI_CLI_PATH,
+    }
+    entry["contentHash"] = content_hash(root / HAGI_SLUG)
+    text = json.dumps(lock, indent=2, ensure_ascii=False) + "\n"
+    if text != lock_path.read_text(encoding="utf-8"):
+        lock_path.write_text(text, encoding="utf-8")
+    return commit
+
+
 def _add_root_option(parser: argparse.ArgumentParser) -> None:
     parser.add_argument(
         "--content",
@@ -263,6 +322,12 @@ def main(argv: list[str] | None = None) -> int:
     hash_parser = commands.add_parser("hash", help="print the sha256 content hash of one skill folder")
     _add_root_option(hash_parser)
     hash_parser.add_argument("slug", help="skill folder name, for example visualise")
+    sync_parser = commands.add_parser(
+        "sync-hagi", help="copy skills/hagi from a commit of the CLI repository and refresh its lock entry"
+    )
+    _add_root_option(sync_parser)
+    sync_parser.add_argument("--cli", type=Path, required=True, help="path to the CLI repository (repos/cli)")
+    sync_parser.add_argument("--ref", default="HEAD", help="CLI commit to copy from (default: HEAD)")
     args = parser.parse_args(argv)
 
     root: Path = args.content
@@ -276,6 +341,18 @@ def main(argv: list[str] | None = None) -> int:
             return 2
         print(content_hash(root / args.slug))
         return 0
+
+    if args.command == "sync-hagi":
+        try:
+            commit = sync_hagi(args.cli, args.ref, root)
+        except (subprocess.CalledProcessError, ValueError, OSError) as error:
+            detail = getattr(error, "stderr", None) or str(error)
+            if isinstance(detail, bytes):
+                detail = detail.decode(errors="replace")
+            print(f"sync-hagi failed: {detail.strip()}", file=sys.stderr)
+            return 2
+        print(f"hagi synced from {HAGI_CLI_REPOSITORY} {commit[:12]}")
+        # fall through to verify, so a sync never leaves the folder in a state the release build would refuse
 
     findings = verify(root)
     if findings:
