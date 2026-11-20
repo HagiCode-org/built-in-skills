@@ -8,6 +8,7 @@ Sources and revisions are in `content/built-in-skills.lock.json`. This file reco
 
 | Skill folder(s) | Source repository | License | Copyright | License file shipped in the skill folder |
 | --- | --- | --- | --- | --- |
+| `humanizer` | `blader/humanizer` | MIT | 2025 Siqi Chen | `LICENSE` |
 | `impeccable` | `pbakaus/impeccable` | Apache-2.0 | Not stated in the license text | `LICENSE`, `NOTICE.md` |
 | `ponytail`, `ponytail-audit`, `ponytail-debt`, `ponytail-gain`, `ponytail-help`, `ponytail-review` | `dietrichgebert/ponytail` | MIT | 2026 DietrichGebert | `LICENSE` in each folder |
 | `systematic-debugging`, `verification-before-completion` | `obra/superpowers` | MIT | 2025 Jesse Vincent | `LICENSE` in each folder |
@@ -20,6 +21,10 @@ The license files in the table are the upstream files at the revision recorded i
 ## impeccable
 
 Apache License 2.0. `content/impeccable/LICENSE` is the full text. `content/impeccable/NOTICE.md` is the upstream third-party notice: the `ios.md` and `android.md` files under `reference/` are distilled from `ehmo/platform-design-skills` (MIT, author ehmo). Both files are in the folder we ship.
+
+## humanizer
+
+MIT. `content/humanizer/LICENSE` is the upstream license file, which names the copyright holder. The folder holds only `SKILL.md` and `LICENSE`; the upstream `README.md`, `CHANGELOG.md`, `AGENTS.md`, package manifests, `agents/` and `scripts/` are left out. `SKILL.md` is byte-for-byte as upstream.
 
 ## ponytail
 

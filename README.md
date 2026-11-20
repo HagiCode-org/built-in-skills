@@ -21,13 +21,14 @@ tests/test_built_in_skills.py     tests for the tool
 
 Everything outside `content/` stays out of release packages. Only `content/` is the publishable unit.
 
-Current skills: `hagi`, `impeccable`, `monospecs`, `ponytail`, `ponytail-audit`, `ponytail-debt`, `ponytail-gain`, `ponytail-help`, `ponytail-review`, `systematic-debugging`, `vercel-react-best-practices`, `verification-before-completion`, `visualise`.
+Current skills: `hagi`, `humanizer`, `impeccable`, `monospecs`, `ponytail`, `ponytail-audit`, `ponytail-debt`, `ponytail-gain`, `ponytail-help`, `ponytail-review`, `systematic-debugging`, `vercel-react-best-practices`, `verification-before-completion`, `visualise`.
 
 ## Trimmed upstream copies
 
-Two skills are copies of an upstream folder with the upstream authoring files left out. Everything that is kept is byte-for-byte as upstream at the lock entry's `ref`, except the one local edit listed for `systematic-debugging`.
+Three skills are copies of an upstream folder with the upstream authoring files left out. Everything that is kept is byte-for-byte as upstream at the lock entry's `ref`, except the one local edit listed for `systematic-debugging`.
 
 - `systematic-debugging` (`obra/superpowers`, `skills/systematic-debugging`, MIT): left out `CREATION-LOG.md` and `test-academic.md`, `test-pressure-1.md`, `test-pressure-2.md`, `test-pressure-3.md`. Local edit to `SKILL.md`, because the upstream text points at skills of the `superpowers` plugin: the line that says to use `superpowers:test-driven-development` is removed (that skill is not built in), and `superpowers:verification-before-completion` is written as `verification-before-completion` (built in, so it loads whatever prefix the agent CLI adds). Reapply both when recopying from upstream.
+- `humanizer` (`blader/humanizer`, repository root, MIT): kept only `SKILL.md` and `LICENSE`; left out `README.md`, `CHANGELOG.md`, `AGENTS.md`, `package.json`, `.claude-plugin/`, `.cursor-plugin/`, `.github/`, `agents/` and `scripts/`. No local edits. Pinned to `a32f244`, which is ahead of the 4.0.0 release (its `SKILL.md` still says `4.0.0`).
 - `vercel-react-best-practices` (`vercel-labs/agent-skills`, `skills/react-best-practices`, MIT per the `license` field in its `SKILL.md`): left out `README.md`. The folder is named after the `name` in its `SKILL.md`, not after the upstream folder, so Claude Code lists it as `hagi:vercel-react-best-practices`.
 
 ## The `hagi` skill
