@@ -13,6 +13,17 @@
       "contentHash": "sha256:14d3aec27214c19e19f44100c88bce65d2d261814afb90689018eda27bf90d95"
     },
     {
+      "slug": "humanizer",
+      "version": "4.0.0",
+      "source": {
+        "type": "github",
+        "repository": "blader/humanizer",
+        "ref": "a32f24407364c74c812b43c15926d638bee1e072",
+        "path": "."
+      },
+      "contentHash": "sha256:c6600bbe639bf5274065bc2e3aad585dac27cf824941ba390db0fc377a2d8d4d"
+    },
+    {
       "slug": "impeccable",
       "version": "4.9.1",
       "source": {
