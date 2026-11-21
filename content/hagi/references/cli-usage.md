@@ -235,7 +235,19 @@ hagi hagitask messages --session-id <session-id> --last 1 --json
 hagi hagitask send --session-id <session-id> --content "Retry with a smaller diff"
 ```
 
-`hagi hagitask get` and `hagi hagitask messages` take the same options as the proposal commands above. `hagi hagitask answer` answers the pending question of a HagiTask session, as described in [Answering a pending question](#answering-a-pending-question).
+`hagi hagitask get` and `hagi hagitask messages` take the same options as the proposal commands above.
+
+Scope flags of `hagitask create` build the request `scope` (repositories, vaults, projects). They replace the removed `targets`, `targetScopes` and `derived.targetScopeMarkdown` input keys and the removed request fields `outputVaultId`, `referenceVaultIds`, `editableVaultIds` and `targetProjects`; the backend rejects those keys by name.
+
+- `--repository [<selection id>=]<path>:<read|write>`: explicit repository, repeatable. Without a selection id the task must have exactly one repository selection (read from the schema, one call); with several, pass the id, for example `--repository targetRepositories=repos/web:write`. The usage error lists the ids.
+- `--all-repositories [<selection id>=]<read|write>`: every repository of the project for a selection. It cannot be combined with `--repository` on the same selection.
+- `--project <project id>:<read|write>`: another project, repeatable.
+- `--output-vault-id <id>`, `--reference-vault-id <ids...>`, `--editable-vault-id <ids...>`: vault roles in `scope.vaults`.
+- A top-level `scope` key in the `--input` file is the request scope. It cannot be combined with any scope flag (exit `2`, no request). The CLI sends the rest of the input unchanged.
+- Usage errors (exit `2`) name the flag and the value and send no request: an access other than `read` or `write`, an empty path or project id, a repeated path in one selection, a conflicting selection, or a missing or ambiguous selection id.
+- `create --json` also prints the built `scope` at the top level (`null` when none was built).
+
+Example: `hagi hagitask create --title "Refactor auth" --project-id <id> --task-id <task-id> --repository repos/web:write --repository repos/cli:read --reference-vault-id vault-docs --project <other-project-id>:read --json`. `hagi hagitask answer` answers the pending question of a HagiTask session, as described in [Answering a pending question](#answering-a-pending-question).
 
 ## Answering a pending question
 
@@ -264,7 +276,7 @@ Start one only when the user asked for it. See [super-commit.md](super-commit.md
 
 - `schema` (human view) lists the target scope, commands and parameters, with each required parameter marked `yes`, then the requirements, scenes, endpoint and an example command. `--json` adds the input JSON Schema and the example request body.
 - `create` needs `--title`, `--project-id`, and either `--task-id` or `--prompt-id`. `--input <file|->` needs `--task-id`. The input must be a JSON object. The CLI does not check its keys; the backend does, and it rejects a key that the schema does not list and a missing required value. A rejection is printed unchanged and no session is reported.
-- `create --json` prints `{ session, presetTaskId, promptId, requested }`. Read the session id from `session.sessionId`. `requested` carries `heroId` or `heroName` when a Hero was given, and `session.chatHero` names the Hero the backend bound when it returns one.
+- `create --json` prints `{ session, presetTaskId, promptId, scope, requested }`, where `scope` is the built scope (or `null`). Read the session id from `session.sessionId`. `requested` carries `heroId` or `heroName` when a Hero was given, and `session.chatHero` names the Hero the backend bound when it returns one.
 - `create --hero <name-or-id>` picks the Hero. A GUID is sent as `heroId`; any other value is sent as `heroName` (trimmed, matched without regard to case). Give `--hero` or `--hero-id`, not both: that is a usage error (exit `2`) and sends nothing. A blank value is also exit `2`. An unknown name, or both fields in one request, fails with the backend's message and creates no session. Needs a backend that includes the `hero_name` field; an older backend ignores the name and runs its default Hero.
 
 Example `input.json` for a task with one required input:
