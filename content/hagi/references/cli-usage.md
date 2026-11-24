@@ -99,7 +99,7 @@ hagi
 |   `-- files list | preview
 |-- chat      list | get | messages | create | archive | delete | send
 |-- hagitask  list | schema | create | send | get | messages | answer
-|-- plan      list | get | create | update | enable | disable | delete | run
+|-- plan      list | get | create | update | enable | disable | delete | run | confirm | cancel-trigger
 |-- skills    local list | enable | disable
 |-- hero      list [--json]
 |-- usage     limits [--provider] [--wait-until-above <percent> --max-wait <seconds> --jitter-seconds <seconds>]
@@ -338,7 +338,14 @@ hagi plan
 - `update`, `enable` and `disable` read the current plan and send it back whole, so unchanged fields are kept. `update --input` replaces each top-level key it contains as a whole value.
 - Interval schedule flags (`--window-start`, `--window-end`, `--first-at`, `--every`, `--time-zone`) build an `interval` schedule on `create` and `update`. Instants need a UTC offset (`Z` or `+hh:mm`), `--every` takes `<n>m`, `<n>h` or `<n>d` and the minimum is 5 minutes. A bad value, or a missing flag, exits `2` with no backend call. On `update` of an interval plan, each flag replaces only its field; on any other plan all four are required. The backend checks order rules and prints each problem by field.
 - `run` creates a session now and waits for it. `run --background` returns `{ planId, accepted: true }` once the backend accepts the run, before the session exists.
+- A plan may carry a `preflight` check: `{ "runtime": "node", "file": "scripts/check.mjs", "timeoutSeconds": 120 }`, with `file` relative to the project root and `timeoutSeconds` optional. `create --input` and `update --input` set it as a whole value. On `update --input`, `"preflight": null` clears it. `update`, `enable` and `disable` send the stored preflight back unchanged. `plan get` shows it as a `preflight` row, and `plan get --json` and `plan list --json` carry it as `preflight`; a plan without one shows no preflight.
 - A manual run does not change the plan's state or next run time, and works for disabled and completed plans.
+- A quota-reset plan has `"schedule": { "mode": "quotaReset", "quotaReset": { "window": "claudeFiveHour", "minRemainingPercent": 20, "maxMinutesBeforeReset": 60, "requireManualConfirmation": true, "skipConfirmationDuringUnattendedHours": false } }`. `list` and `get` summarize it on one line (`quotaReset claudeFiveHour >=20% <=60m manual`), with `manual` and `skip-unattended` only when those flags are set.
+- A quota trigger that waits for manual confirmation shows as `scheduled (trigger pending)` in the `plan list` State cell, and `plan get` adds a `pendingTrigger` row (`pending since <raisedAt>, window resets <windowResetAt>`) plus the hint to run `plan confirm` or `plan cancel-trigger`. `lastTriggeredReset` is shown in `plan get` only when the plan has run for a reset. `plan get --json` and `plan list --json` carry `lastTriggeredResetAt` and `pendingQuotaTrigger` (`{ raisedAt, windowResetAt }`), each `null` when absent.
+- `plan confirm --id <id>` starts the waiting run. It prints the accepted run, and `--json` prints `{ planId, accepted: true }`. A trigger that is no longer waiting (already answered, expired or never raised) is refused by the backend with a conflict: the command exits `29`, prints no accepted run and changes nothing.
+- `plan cancel-trigger --id <id>` drops the waiting trigger without running it and prints the updated plan; `--json` prints it under `plan`. Cancelling when nothing is pending succeeds with no effect and exits `0`. Use it only when the user asks to skip the run.
+- Both commands need `--id`; without it they exit `2` with no backend call. Backend 400, 404 and 503 map to exit codes `20`, `24` and `50`.
+- `update` keeps `schedule.quotaReset` on a plain update, with `--name`, and with `--time-zone`. Interval flags replace the whole schedule and drop `quotaReset`. The trigger fields are server-owned: a `plan get --json` document reused with `--input` does not send them.
 
 A one-time proposal plan document for `plan create --input`:
 
