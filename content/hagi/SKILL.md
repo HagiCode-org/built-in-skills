@@ -8,8 +8,8 @@ description: Use when the user wants to run, verify, or update the HagiCode CLI 
 Use this skill when the user asks to:
 
 - answer questions about their own projects, proposals, chat sessions, vaults, scheduled plans, or installed skills
-- list which installed skills are user skills and which are built-in skills, or which built-in skills are enabled
-- enable or disable a built-in skill
+- list which installed skills are user, built-in or Self Evolution skills, or which built-in and Self Evolution skills are enabled
+- enable or disable a built-in skill, or one Self Evolution skill by name
 - run or verify the `hagi` CLI
 - run, explain, or verify local `saga init`, `saga new`, `saga list`, `saga status`, or `saga items` operations
 - read a published Saga method (`goal`, `research`, `acceptance`, `plan`, `run`, `amend`) with `saga method <name>`
@@ -29,7 +29,7 @@ Use this skill when the user asks to:
 - Run repository-local install, build, and test commands with the working directory set to `repos/cli`.
 - Never run `pnpm install`, `pnpm run`, or other build commands at the monorepo root.
 - Prioritize API invocation guidance over codebase tours unless the user explicitly wants implementation work.
-- Built-in skills can be enabled or disabled with `hagi skills local enable --skill-name <name>` and `hagi skills local disable --skill-name <name>`. They cannot be uninstalled or updated through the CLI. A change applies to agent runs that start afterwards; a run already in progress keeps the skills it started with.
+- Built-in and Self Evolution skills can be enabled or disabled per skill with `hagi skills local enable --skill-name <name>` and `hagi skills local disable --skill-name <name>`. A built-in skill with the same name is changed first. They cannot be uninstalled, updated, edited or deleted through the CLI. A change applies to agent runs that start afterwards; a run already in progress keeps the skills it started with.
 - Every proposal names its writable repositories and its read-only repositories, in a `Repository scope` section at the start of `--chief-complaint`. Both lists are always present, and an empty list is written as `none`. Take the paths from `hagi project repositories --id <project-id> --json`. When neither the user's request nor the session gives the scope, ask the user and offer those repositories as the choices; never guess a scope or widen the writable list. Details: [`references/proposal-flow.md`](references/proposal-flow.md#repository-scope).
 
 ## Choose the workflow

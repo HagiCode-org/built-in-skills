@@ -376,7 +376,7 @@ The README's `## Plan Commands` section has a recurring HagiTask example and the
 
 ## Skills commands
 
-`skills local list` shows each installed skill with its origin (`user` or `built-in`), its enabled state for built-in skills (`yes` or `no`, shown as `-` for user skills), its version, scope, agents and path. `--json` returns the same data with the `origin` and `builtIn` fields.
+`skills local list` shows each installed skill with its origin (`user`, `built-in` or `self-evolution`), its enabled state for built-in and Self Evolution skills (`yes` or `no`, shown as `-` for user skills), its version, scope, agents and path. A Self Evolution skill also shows its status (`ready`, `invalid`, `conflict` or `flagged`) in a Status column, which appears only when at least one Self Evolution skill is installed. `--json` returns the same data with the `origin`, `builtIn` and `selfEvolution` (`enabled`, `status`, `version`) fields. The listing never prints a skill's content.
 
 ```bash
 hagi skills local list
@@ -385,7 +385,7 @@ hagi skills local enable --skill-name hagi
 hagi skills local disable --skill-name hagi --json
 ```
 
-- `enable` and `disable` take `--skill-name` and change one built-in skill. They apply to agent runs that start afterwards.
+- `enable` and `disable` take `--skill-name` and change one built-in or Self Evolution skill. A built-in skill with the same name is changed first, and the output then says the Self Evolution skill is in conflict. A name that is neither exits with `30`. They apply to agent runs that start afterwards, and they never delete or edit the skill's files.
 
 ## Agent lock commands
 
@@ -452,7 +452,7 @@ Stable non-zero exits used by the CLI. The HTTP numbers are the equivalents of t
 | `23` | HTTP 403 |
 | `24` | HTTP 404 |
 | `29` | HTTP 409 |
-| `30` | Operation failed: the backend returned a refusal, for example `skills local enable` or `disable` on a name that is not a built-in skill, an invalid MonoSpecs configuration, or a failed MonoSpecs clone |
+| `30` | Operation failed: the backend returned a refusal, for example `skills local enable` or `disable` on a name that is neither a built-in nor a Self Evolution skill, an invalid MonoSpecs configuration, or a failed MonoSpecs clone |
 | `31` | Wait timed out: `--wait` on `proposal get`, `hagitask get` or `agent lock acquire` reached `--timeout` before the session settled. The last status is printed. Not a success, and not a backend error |
 | `32` | Lock lost: a `hagi agent lock` command learned that the owner no longer holds the lock (expired, taken back at the 24-hour cap, stale epoch, requisitioned). Stop using the resource. Distinct from `31` |
 | `34` | Quota unavailable: `hagi usage limits` could not read a usable figure, either on a plain read or after a wait's retries. Nothing is known about the quota, so none is claimed. Low quota is not this code: it exits `0` |

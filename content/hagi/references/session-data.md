@@ -151,9 +151,10 @@ hagi skills local list --json
 
 `hagi skills local list --json` returns one item per installed skill. Read these fields from each item:
 
-- `origin`: `user` for a skill the user installed, `built-in` for a skill the server ships. An item with no `origin` is a user skill.
+- `origin`: `user` for a skill the user installed, `built-in` for a skill the server ships, `self-evolution` for a Self Evolution skill. An item with no `origin` is a user skill.
 - `builtIn.enabled`: whether a built-in skill is on. It is present only for built-in skills. For user skills, availability does not apply.
 - `builtIn.version`: the version the release recorded for a built-in skill. It may be absent.
+- `selfEvolution.enabled`, `selfEvolution.status` and `selfEvolution.version`: present only for Self Evolution skills. `status` is `ready`, `invalid` (not loadable), `conflict` or `flagged`.
 - `managedInstallMetadata.version`: the version of a user skill, when recorded.
 
 ## State-changing commands
@@ -183,7 +184,7 @@ A `send` with Steer (`--steer`, or `HAGI_SEND_STEER` set in the calling shell) i
 
 `hagitask create` with a Super Commit prompt (`--prompt-id auto-compose-commit.<locale>`) creates commits in a code repository, and with `--need-push` publishes them. Start it only when the user asked for it in this conversation, and add `--need-push` only when the user asked for a push. See [`super-commit.md`](super-commit.md).
 
-`skills local enable` and `skills local disable` change whether a built-in skill loads. The change applies to agent runs that start afterwards; a run already in progress keeps its skills. Built-in skills cannot be uninstalled through the CLI.
+`skills local enable` and `skills local disable` change whether one built-in or Self Evolution skill loads. The change applies to agent runs that start afterwards; a run already in progress keeps its skills. Built-in and Self Evolution skills cannot be uninstalled, edited or deleted through the CLI.
 
 Before `proposal create`, the proposal's repository scope is settled. Take the writable and read-only repositories from the user's request, or infer them from the session's repository scope when the session states one. When neither gives the scope, ask the user and offer the project's repositories from `project repositories --id <project-id> --json` as the choices. Do not guess the scope, and do not widen the writable list. The scope is written into the chief complaint as a `Repository scope` section; see [`proposal-flow.md`](proposal-flow.md#repository-scope).
 
@@ -198,7 +199,7 @@ When you name the action and its target before running `proposal create`, name i
 | `24` | Not found | Name the id that was not found and suggest a `list` command to find the right one. For `answer` and `messages --pending-question`, it also means no question is pending: read the messages again before answering. |
 | `35` | Answer refused, by the CLI or the backend | Quote the reason the output names (for example an unknown option or a value too long). Nothing changed. Ask the user for a valid answer; do not retry the same answer. |
 | `36` | Question already answered or no longer open | Read the messages again and report the state. Do not answer it again. |
-| `30` | Operation failed: the backend refused a change and returned a result with `succeeded` false, for example `skills local enable` or `disable` on a name that is not a built-in skill | Quote the backend message from the output and stop. Nothing changed. |
+| `30` | Operation failed: the backend refused a change and returned a result with `succeeded` false, for example `skills local enable` or `disable` on a name that is neither a built-in nor a Self Evolution skill | Quote the backend message from the output and stop. Nothing changed. |
 | `60` | Transport or connection failure | Say the backend is unreachable at the named base URL. Do not retry in a loop, and do not guess another address. |
 | other non-zero | HTTP or unknown error | Quote the error message and stop. |
 
