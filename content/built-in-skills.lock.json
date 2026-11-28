@@ -7,10 +7,10 @@
       "source": {
         "type": "github",
         "repository": "HagiCode-org/cli",
-        "ref": "daabbdbe8c7af5320cda6f73fa04f2374f7a76a1",
+        "ref": "602de30021472dff19ab59e5f393965a890983e1",
         "path": "skills/hagi"
       },
-      "contentHash": "sha256:f00f4eef3138460791f7cd6bf261dca67188d35f8b9384a7ecc6198e5200eec6"
+      "contentHash": "sha256:6b0b9b871910ed46067c6fab821a44c714d92ac1d68899c4198f28aef5c37168"
     },
     {
       "slug": "humanizer",
